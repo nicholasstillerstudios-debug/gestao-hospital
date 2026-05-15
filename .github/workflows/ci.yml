@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [devin/initial-mvp, main]
+  pull_request:
+
+jobs:
+  check:
+    name: Lint + Typecheck + Test + Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install system deps (for better-sqlite3 / electron build)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends python3 make g++ libsecret-1-dev
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # better-sqlite3 é recompilado para o ABI do Electron pelo postinstall
+      # (`electron-builder install-app-deps`). Para os testes unitários, que
+      # rodam em Node, precisamos do binário compilado contra o ABI do Node.
+      - name: Rebuild native modules for Node (test runtime)
+        run: npm rebuild better-sqlite3 --silent
+
+      - name: Unit tests
+        run: npm test
+
+      # Volta o better-sqlite3 ao ABI do Electron antes do build do app.
+      - name: Restore Electron native modules
+        run: npx electron-builder install-app-deps
+
+      - name: Build (electron-vite bundle)
+        run: npx electron-vite build

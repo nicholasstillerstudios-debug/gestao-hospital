@@ -1,0 +1,98 @@
+TERMO DE USO E ACEITE — GESTÃO HOSPITALAR
+
+Versão 1.0.0
+Última atualização: 2026
+
+LEIA ESTE TERMO COM ATENÇÃO ANTES DE INSTALAR. AO PROSSEGUIR COM A
+INSTALAÇÃO, VOCÊ DECLARA QUE LEU, COMPREENDEU E ACEITA INTEGRALMENTE
+AS CONDIÇÕES ABAIXO. SE NÃO CONCORDAR, CANCELE A INSTALAÇÃO.
+
+1. OBJETO
+1.1. O Gestão Hospitalar ("Software") é uma aplicação de gestão de
+atendimentos para uso em Hospitais e estabelecimentos de saúde,
+oferecida sem custo, em formato instalável, sob os termos descritos
+neste documento.
+1.2. O Software está em fase de desenvolvimento contínuo. Funções,
+relatórios e integrações podem ser alterados, removidos ou substituídos
+em versões futuras sem aviso prévio.
+
+2. ESCOPO DE USO
+2.1. O Software destina-se a profissionais de saúde, gestores e
+recepcionistas de Hospitais e estabelecimentos de saúde,
+exclusivamente para apoio operacional ao atendimento.
+2.2. NÃO substitui sistemas oficiais do SUS (e-SUS APS, SISAB, CADSUS,
+PEC) e não realiza, no momento, qualquer integração com tais
+plataformas. O envio de informações oficiais permanece de
+responsabilidade do operador.
+2.3. O Software NÃO emite prescrição eletrônica assinada digitalmente
+nos termos da legislação vigente. Receituários impressos pelo Software
+exigem assinatura manuscrita ou meio equivalente legalmente válido.
+
+3. DADOS PESSOAIS — LGPD (LEI Nº 13.709/2018)
+3.1. O Software armazena dados pessoais de pacientes (incluindo dados
+sensíveis de saúde) em banco de dados local, na máquina onde está
+instalado.
+3.2. O estabelecimento de saúde que opera o Software é a CONTROLADORA
+dos dados pessoais tratados, sendo responsável pela base legal,
+finalidade, retenção, segurança física e lógica do equipamento e pelo
+atendimento aos direitos dos titulares.
+3.3. O Software fornece, sem custo adicional, ferramentas para apoiar
+o cumprimento da LGPD:
+     a) Exportação de dados do paciente em formato JSON (direito de
+        portabilidade — art. 18, V);
+     b) Anonimização irreversível de paciente (apoio ao atendimento
+        dos arts. 16 e 18, IV e VI);
+     c) Trilha de auditoria com retenção configurável.
+3.4. Cabe ao estabelecimento controlador: nomear encarregado (DPO)
+quando exigido por lei, manter o equipamento em local seguro,
+restringir o acesso físico ao banco de dados, realizar e custodiar
+cópias de segurança, configurar política de retenção compatível com
+sua realidade e responder a requisições de titulares e da ANPD.
+
+4. SEGURANÇA E BACKUPS
+4.1. A versão atual do Software armazena o banco de dados em arquivo
+SQLite local, sem criptografia em repouso. A proteção do arquivo
+depende dos controles do sistema operacional e do equipamento.
+4.2. Os backups gerados pela funcionalidade de exportação preservam o
+formato do banco e devem ser custodiados pelo controlador, observando
+sigilo profissional e a LGPD.
+4.3. Recomenda-se: senha forte para a conta do sistema operacional,
+criptografia de disco (BitLocker ou equivalente), backups periódicos
+para mídia externa controlada e revisão regular do log de auditoria.
+
+5. PROPRIEDADE INTELECTUAL E LICENÇA
+5.1. O Software é distribuído pelos seus autores sob licença MIT,
+permitindo uso, cópia, modificação e redistribuição, observados os
+termos da licença original publicada no repositório do projeto.
+5.2. Marcas, nomes e logotipos eventualmente presentes pertencem a
+seus respectivos titulares e seu uso não implica vínculo institucional.
+
+6. AUSÊNCIA DE GARANTIAS
+6.1. O SOFTWARE É FORNECIDO "COMO ESTÁ" ("AS IS"), SEM QUALQUER
+GARANTIA EXPRESSA OU IMPLÍCITA, INCLUINDO MAS NÃO SE LIMITANDO ÀS
+GARANTIAS DE COMERCIABILIDADE, ADEQUAÇÃO A UM PROPÓSITO ESPECÍFICO E
+NÃO VIOLAÇÃO.
+6.2. Os autores e contribuidores não se responsabilizam por danos
+diretos, indiretos, lucros cessantes, perda de dados, interrupção de
+atendimento, sanções administrativas, civis ou penais decorrentes do
+uso do Software, ainda que cientes da possibilidade de tais danos.
+6.3. A decisão clínica e administrativa permanece de inteira
+responsabilidade dos profissionais de saúde e gestores envolvidos.
+
+7. ATUALIZAÇÕES E SUPORTE
+7.1. Atualizações são publicadas a critério dos autores, sem
+compromisso de prazo.
+7.2. Não há serviço formal de suporte técnico associado a esta
+distribuição. Eventuais canais de contato são meramente colaborativos.
+
+8. DISPOSIÇÕES FINAIS
+8.1. Em caso de conflito entre este Termo e a legislação aplicável,
+prevalecerá a legislação.
+8.2. Este Termo é regido pelas leis da República Federativa do Brasil.
+8.3. Fica eleito o foro do domicílio do controlador para dirimir
+qualquer questão decorrente, com renúncia a qualquer outro, por mais
+privilegiado que seja.
+
+AO CLICAR EM "EU CONCORDO" OU EQUIVALENTE, VOCÊ DECLARA TER LIDO,
+COMPREENDIDO E ACEITO ESTE TERMO, BEM COMO ASSUMIR AS RESPONSABILIDADES
+DE CONTROLADOR DE DADOS PESSOAIS PERANTE A LGPD.

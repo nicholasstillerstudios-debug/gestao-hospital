@@ -1,0 +1,96 @@
+appId: br.hospital.gestao
+productName: Gestão Hospitalar
+copyright: Copyright © 2024-2026 Nicholas Stiller. Todos os direitos reservados.
+buildVersion: ${version}
+
+directories:
+  buildResources: build
+
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  - '!tests/*'
+  - '!scripts/*'
+
+asarUnpack:
+  - resources/**
+
+# ─── Windows ──────────────────────────────────────────────────────────────────
+win:
+  executableName: gestao-hospital
+  icon: build/icon.ico
+  legalTrademarks: Gestão Hospitalar
+  requestedExecutionLevel: asInvoker
+  verifyUpdateCodeSignature: false
+  signAndEditExecutable: false
+
+nsis:
+  artifactName: GestaoHospitalar-${version}-Setup.${ext}
+  shortcutName: Gestão Hospitalar
+  uninstallDisplayName: Gestão Hospitalar ${version}
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  allowElevation: true
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  license: build/license_pt_br.txt
+  language: '1046'
+  runAfterFinish: true
+  deleteAppDataOnUninstall: false
+  menuCategory: 'Saúde'
+  include: null
+  script: null
+
+# ─── macOS ────────────────────────────────────────────────────────────────────
+mac:
+  entitlementsInherit: build/entitlements.mac.plist
+  icon: build/icon.icns
+  category: public.app-category.medical
+  extendInfo:
+    - NSCameraUsageDescription: Application requests access to the device's camera.
+    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
+    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
+    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+  notarize: false
+
+dmg:
+  artifactName: GestaoHospitalar-${version}.${ext}
+  title: Gestão Hospitalar ${version}
+  icon: build/icon.icns
+  background: null
+
+# ─── Linux ────────────────────────────────────────────────────────────────────
+linux:
+  target:
+    - AppImage
+    - deb
+  maintainer: nicholasstillerstudios@gmail.com
+  vendor: Nicholas Stiller
+  category: Science
+  synopsis: Sistema de gestão hospitalar
+  description: |
+    Sistema desktop offline para gestão hospitalar. Inclui leitos, internações,
+    prontuário, evolução clínica, prescrição com aprazamento (MAR), sinais vitais,
+    balanço hídrico, pronto-socorro com classificação de risco, centro cirúrgico
+    e CCIH (controle de infecção hospitalar).
+  icon: build/icon.png
+
+appImage:
+  artifactName: GestaoHospitalar-${version}.${ext}
+
+# ─── Outros ───────────────────────────────────────────────────────────────────
+npmRebuild: false
+
+publish:
+  provider: github
+  owner: nicholasstillerstudios-debug
+  repo: gestao-hospital
+  releaseType: release
+  publishAutoUpdate: true

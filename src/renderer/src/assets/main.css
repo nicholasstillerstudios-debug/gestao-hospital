@@ -1,0 +1,683 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-ubs-primary: #0e7490;
+  --color-ubs-primary-dark: #0b5c74;
+  --color-ubs-accent: #198754;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+  --app-bg: #f3f6f9;
+  --app-surface: #ffffff;
+  --app-surface-muted: #f8fafc;
+  --app-text: #0f172a;
+  --app-text-muted: #475569;
+  --app-border: #e2e8f0;
+  --app-border-strong: #cbd5e1;
+}
+
+html.dark {
+  color-scheme: dark;
+  --app-bg: #0b1220;
+  --app-surface: #111c2e;
+  --app-surface-muted: #0f1a2b;
+  --app-text: #e2e8f0;
+  --app-text-muted: #94a3b8;
+  --app-border: #1f2a3d;
+  --app-border-strong: #2a3650;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--app-bg);
+  color: var(--app-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* Triage color badges */
+.triage-azul {
+  background-color: #2563eb;
+  color: white;
+}
+.triage-verde {
+  background-color: #16a34a;
+  color: white;
+}
+.triage-amarelo {
+  background-color: #eab308;
+  color: #1f2937;
+}
+.triage-laranja {
+  background-color: #ea580c;
+  color: white;
+}
+.triage-vermelho {
+  background-color: #dc2626;
+  color: white;
+}
+
+/* Layout para impressão (ficha de atendimento + atestado). */
+.print-document {
+  background: #f6f8fa;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 64px;
+}
+
+.print-toolbar {
+  width: 210mm;
+  max-width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.print-toolbar button {
+  padding: 6px 12px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.print-page {
+  background: white;
+  width: 210mm;
+  max-width: 100%;
+  min-height: 297mm;
+  padding: 24mm 20mm;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-size: 12pt;
+  line-height: 1.4;
+  color: #1f2937;
+}
+
+.print-header {
+  border-bottom: 2px solid #1f2937;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+}
+
+.print-header h1 {
+  font-size: 18pt;
+  margin: 8px 0 0;
+  font-weight: 600;
+}
+
+.print-header .muted {
+  color: #475569;
+  font-size: 10pt;
+}
+
+.print-letterhead {
+  text-align: center;
+}
+
+.print-letterhead-logos {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.print-letterhead-logo {
+  flex: 0 0 22mm;
+  height: 22mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.print-letterhead-logo img {
+  max-width: 22mm;
+  max-height: 22mm;
+  object-fit: contain;
+}
+
+.print-letterhead-text {
+  font-size: 11pt;
+  line-height: 1.35;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.print-letterhead-text .line-1 {
+  font-size: 11pt;
+}
+
+.print-letterhead-text .line-2 {
+  font-size: 11pt;
+}
+
+.print-letterhead-text .line-3 {
+  font-size: 12pt;
+  margin-top: 2px;
+}
+
+.print-letterhead-address {
+  margin-top: 4px;
+  font-size: 9.5pt;
+}
+
+.print-section {
+  margin-bottom: 16px;
+}
+
+.print-section h2 {
+  font-size: 12pt;
+  font-weight: 600;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #334155;
+}
+
+.print-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 24px;
+  margin: 0;
+}
+
+.print-grid dt {
+  font-size: 9pt;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.print-grid dd {
+  font-size: 11pt;
+  margin: 0 0 4px;
+  color: #1f2937;
+}
+
+.print-soap {
+  border: 1px solid #e2e8f0;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-radius: 4px;
+}
+
+.print-soap h3 {
+  margin: 0 0 4px;
+  font-size: 10pt;
+  color: #0b7285;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.print-soap p {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 11pt;
+}
+
+.print-signature {
+  margin-top: 56px;
+  text-align: center;
+  font-size: 11pt;
+}
+
+.print-signature .signature-line {
+  width: 240px;
+  border-top: 1px solid #1f2937;
+  margin: 18px auto 6px;
+}
+
+.prescription-list,
+.requisition-list {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.prescription-list > li {
+  margin-bottom: 14px;
+  font-size: 11pt;
+}
+
+.prescription-list .prescription-line {
+  font-size: 12pt;
+}
+
+.requisition-list > li {
+  margin-bottom: 8px;
+  font-size: 12pt;
+}
+
+.muted {
+  color: #94a3b8;
+}
+
+/* ---- Animações utilitárias ---- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+/* Pulso forte do nome do paciente quando uma nova chamada chega no painel. */
+@keyframes callBurst {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+    filter: drop-shadow(0 0 0 rgba(14, 116, 144, 0));
+  }
+  35% {
+    transform: scale(1.06);
+    opacity: 1;
+    filter: drop-shadow(0 0 30px rgba(14, 116, 144, 0.85));
+  }
+  60% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 18px rgba(14, 116, 144, 0.55));
+  }
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0 rgba(14, 116, 144, 0));
+  }
+}
+
+.animate-call-burst {
+  animation: callBurst 1.6s ease-out both;
+}
+
+@keyframes panelPulseBg {
+  0% {
+    background-color: rgba(14, 116, 144, 0.25);
+  }
+  50% {
+    background-color: rgba(14, 116, 144, 0.05);
+  }
+  100% {
+    background-color: rgba(14, 116, 144, 0);
+  }
+}
+
+.animate-panel-pulse {
+  animation: panelPulseBg 1.4s ease-out both;
+}
+
+@keyframes authSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- Tela de autenticação (Login + Trocar senha) ---- */
+.auth-shell {
+  isolation: isolate;
+}
+
+.auth-side-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(140% 90% at 0% 0%, rgba(255, 255, 255, 0.18), transparent 60%),
+    radial-gradient(120% 80% at 100% 100%, rgba(255, 255, 255, 0.08), transparent 55%),
+    linear-gradient(
+      135deg,
+      var(--color-ubs-primary) 0%,
+      var(--color-ubs-primary-dark) 55%,
+      #07304a 100%
+    );
+  z-index: 0;
+}
+
+.auth-side-pattern {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.12) 0, rgba(255, 255, 255, 0) 60%),
+    radial-gradient(circle at 82% 78%, rgba(255, 255, 255, 0.08) 0, rgba(255, 255, 255, 0) 55%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='rgba(255,255,255,0.07)' stroke-width='1.2'><path d='M40 16v18'/><path d='M40 46v18'/><path d='M16 40h18'/><path d='M46 40h18'/></g></svg>");
+  background-repeat: no-repeat, no-repeat, repeat;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.auth-main-bg {
+  background:
+    radial-gradient(
+      60% 40% at 100% 0%,
+      color-mix(in srgb, var(--color-ubs-primary) 8%, transparent) 0,
+      transparent 70%
+    ),
+    radial-gradient(
+      80% 60% at 0% 100%,
+      color-mix(in srgb, var(--color-ubs-primary) 5%, transparent) 0,
+      transparent 70%
+    ),
+    var(--app-bg);
+}
+
+.auth-card {
+  /* O card visual fica embutido na tela direita pra parecer mais limpo;
+     ajustes ficam por aqui caso queira voltar a um cartão flutuante. */
+}
+
+.auth-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-input-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--app-text-muted);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.auth-input-control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-input-icon {
+  position: absolute;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--app-text-muted);
+  pointer-events: none;
+}
+
+.auth-input {
+  width: 100%;
+  appearance: none;
+  border-radius: 10px;
+  border: 1px solid var(--app-border-strong);
+  background: var(--app-surface);
+  color: var(--app-text);
+  padding: 11px 12px 11px 38px;
+  font-size: 14px;
+  line-height: 1.2;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background 150ms ease;
+}
+
+/* Inputs sem ícone (como em Trocar senha) também precisam de padding ok. */
+.auth-input-control > .auth-input:first-child {
+  padding-left: 14px;
+}
+
+.auth-input::placeholder {
+  color: color-mix(in srgb, var(--app-text-muted) 70%, transparent);
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: var(--color-ubs-primary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-ubs-primary) 18%, transparent);
+}
+
+.auth-input-toggle {
+  position: absolute;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  width: 28px;
+  border-radius: 6px;
+  color: var(--app-text-muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.auth-input-toggle:hover {
+  background: color-mix(in srgb, var(--app-text-muted) 12%, transparent);
+  color: var(--app-text);
+}
+
+.auth-input-hint {
+  font-size: 11px;
+  color: var(--app-text-muted);
+  margin-top: 2px;
+}
+
+.auth-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 0;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+  color: white;
+  background: linear-gradient(180deg, var(--color-ubs-primary), var(--color-ubs-primary-dark));
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.25) inset,
+    0 8px 18px -8px color-mix(in srgb, var(--color-ubs-primary) 60%, transparent);
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    box-shadow 200ms ease,
+    opacity 150ms ease,
+    filter 150ms ease;
+}
+
+.auth-submit:hover:not(:disabled) {
+  filter: brightness(1.05);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.25) inset,
+    0 12px 22px -8px color-mix(in srgb, var(--color-ubs-primary) 70%, transparent);
+}
+
+.auth-submit:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.auth-submit:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--color-ubs-primary) 25%, transparent),
+    0 8px 18px -8px color-mix(in srgb, var(--color-ubs-primary) 60%, transparent);
+}
+
+.auth-submit:disabled {
+  cursor: progress;
+  opacity: 0.85;
+}
+
+.auth-spinner {
+  height: 16px;
+  width: 16px;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: white;
+  animation: authSpin 0.7s linear infinite;
+}
+
+/* ---- Sidebar (dark, empresarial, alto contraste) ---- */
+.app-sidebar {
+  position: relative;
+  color: #e6edf5;
+  background: linear-gradient(180deg, #0e2533 0%, #0a1b26 55%, #08141d 100%);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.04);
+  isolation: isolate;
+}
+
+.app-sidebar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(
+      60% 40% at 0% 0%,
+      color-mix(in srgb, var(--color-ubs-primary) 22%, transparent) 0,
+      transparent 60%
+    ),
+    radial-gradient(
+      50% 30% at 100% 100%,
+      color-mix(in srgb, var(--color-ubs-primary) 10%, transparent) 0,
+      transparent 60%
+    );
+}
+
+.app-sidebar > * {
+  position: relative;
+  z-index: 1;
+}
+
+.app-sidebar-brand {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.app-sidebar-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 15%,
+    rgba(255, 255, 255, 0.08) 85%,
+    transparent 100%
+  );
+}
+
+.app-nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px 9px 14px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: rgba(230, 237, 245, 0.72);
+  transition:
+    background 150ms ease,
+    color 150ms ease,
+    transform 120ms ease;
+}
+
+.app-nav-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.app-nav-link:active {
+  transform: translateY(0.5px);
+}
+
+.app-nav-link.is-active {
+  background: color-mix(in srgb, var(--color-ubs-primary) 30%, transparent);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-ubs-primary) 40%, transparent);
+}
+
+.app-nav-link.is-active::before {
+  content: '';
+  position: absolute;
+  left: -3px;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--color-ubs-primary) 80%, white);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-ubs-primary) 70%, transparent);
+}
+
+/* ---- Page header (empresarial) ---- */
+.app-page-header {
+  background: var(--app-surface);
+  border-bottom: 1px solid var(--app-border);
+  position: relative;
+}
+
+.app-page-header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-ubs-primary) 85%, transparent) 0%,
+    color-mix(in srgb, var(--color-ubs-primary) 45%, transparent) 35%,
+    transparent 80%
+  );
+  pointer-events: none;
+}
+
+html.dark .app-page-header {
+  background: var(--app-surface);
+  border-bottom-color: var(--app-border);
+}
+
+@media print {
+  body {
+    background: white !important;
+  }
+  .print-document {
+    background: white !important;
+    padding: 0 !important;
+  }
+  .print-toolbar {
+    display: none !important;
+  }
+  .print-page {
+    box-shadow: none !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+  }
+  @page {
+    size: A4;
+    margin: 18mm 18mm 18mm 18mm;
+  }
+}
