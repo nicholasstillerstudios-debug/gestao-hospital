@@ -1810,7 +1810,13 @@ function NetworkTab(): React.JSX.Element {
           {error}
         </div>
       ) : null}
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        <a
+          href="#/setup"
+          className="text-xs font-medium text-cyan-700 hover:text-cyan-800 hover:underline"
+        >
+          Abrir assistente passo a passo →
+        </a>
         <Button onClick={() => void submit()} disabled={saving}>
           {saving ? 'Salvando…' : 'Salvar'}
         </Button>

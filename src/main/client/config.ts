@@ -13,6 +13,8 @@ export interface BootConfig {
   runMode: RunMode
   serverUrl?: string
   serverPort?: number
+  /** True = primeira execução (runmode.json ainda não existe). Lido só. */
+  firstRun?: boolean
 }
 
 function file(): string {
@@ -22,13 +24,13 @@ function file(): string {
 export function loadBootConfig(): BootConfig {
   try {
     const p = file()
-    if (!existsSync(p)) return { runMode: 'standalone' }
+    if (!existsSync(p)) return { runMode: 'standalone', firstRun: true }
     const raw = JSON.parse(readFileSync(p, 'utf8')) as Partial<BootConfig>
     const m: RunMode =
       raw.runMode === 'server' || raw.runMode === 'client' ? raw.runMode : 'standalone'
-    return { runMode: m, serverUrl: raw.serverUrl, serverPort: raw.serverPort }
+    return { runMode: m, serverUrl: raw.serverUrl, serverPort: raw.serverPort, firstRun: false }
   } catch {
-    return { runMode: 'standalone' }
+    return { runMode: 'standalone', firstRun: true }
   }
 }
 

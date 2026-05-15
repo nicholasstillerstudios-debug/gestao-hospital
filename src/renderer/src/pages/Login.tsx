@@ -208,6 +208,15 @@ export function LoginPage(): React.JSX.Element {
           </code>
           . Você será obrigado a trocar a senha no próximo login.
         </p>
+
+        <p className="mt-2 text-center text-[11px]">
+          <a
+            href="#/setup"
+            className="font-medium text-cyan-700 hover:text-cyan-800 hover:underline"
+          >
+            Configurar conexão de rede (LAN)
+          </a>
+        </p>
       </form>
     </AuthShell>
   )

@@ -568,8 +568,12 @@ const api = {
       invoke(IPC.ccih.indicators, options)
   },
   client: {
-    getBoot: (): Promise<{ runMode: 'standalone' | 'server' | 'client'; serverUrl?: string; serverPort?: number }> =>
-      invoke(IPC.client.getBoot),
+    getBoot: (): Promise<{
+      runMode: 'standalone' | 'server' | 'client'
+      serverUrl?: string
+      serverPort?: number
+      firstRun?: boolean
+    }> => invoke(IPC.client.getBoot),
     setBoot: (cfg: { runMode: 'standalone' | 'server' | 'client'; serverUrl?: string; serverPort?: number }): Promise<{ ok: boolean }> =>
       invoke(IPC.client.setBoot, cfg),
     ping: (url: string): Promise<{ ok: boolean; version?: string; error?: string }> =>

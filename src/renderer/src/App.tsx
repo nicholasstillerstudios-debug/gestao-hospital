@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from './stores/auth'
 import { useTheme } from './stores/theme'
 import { useUnit } from './stores/unit'
@@ -36,6 +36,23 @@ import {
   PrintPrescriptionPage,
   PrintRequisitionPage
 } from './pages/Print'
+import { SetupPage } from './pages/Setup'
+
+function FirstRunGate(): null {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [checked, setChecked] = useState(false)
+  useEffect(() => {
+    if (checked) return
+    setChecked(true)
+    void window.api.client.getBoot().then((b) => {
+      if (b.firstRun && location.pathname !== '/setup') {
+        navigate('/setup', { replace: true })
+      }
+    })
+  }, [checked, location.pathname, navigate])
+  return null
+}
 
 function App(): React.JSX.Element {
   const bootstrap = useAuth((s) => s.bootstrap)
@@ -57,8 +74,11 @@ function App(): React.JSX.Element {
   }, [user, loadTheme, loadUnit])
 
   return (
-    <Routes>
+    <>
+      <FirstRunGate />
+      <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/setup" element={<SetupPage />} />
       <Route path="/trocar-senha" element={<ChangePasswordPage />} />
       <Route path="/painel" element={<CallPanelPage />} />
       <Route
@@ -251,7 +271,8 @@ function App(): React.JSX.Element {
         />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </>
   )
 }
 
