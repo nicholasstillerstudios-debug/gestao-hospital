@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { BrandLogo } from '@renderer/components/BrandLogo'
+import { useAuth } from '@renderer/stores/auth'
 import type { PatientCall } from '@shared/types'
 
 /**
@@ -121,6 +123,12 @@ function callMessage(call: PatientCall): string {
 }
 
 export function CallPanelPage(): React.JSX.Element {
+  const navigate = useNavigate()
+  // Se houver usuário logado na sessão, é porque o painel foi aberto na
+  // janela principal por engano (clicar no menu antigo). Mostramos botão
+  // "Voltar ao sistema" para o operador sair daqui. Na janela secundária
+  // do painel (que abre via panel.open) não há sessão logada — botão some.
+  const sessionUser = useAuth((s) => s.user)
   const [calls, setCalls] = useState<PatientCall[]>([])
   const [now, setNow] = useState(() => new Date())
   const [voicesReady, setVoicesReady] = useState(false)
@@ -231,11 +239,21 @@ export function CallPanelPage(): React.JSX.Element {
         <div className="flex items-center gap-3">
           <BrandLogo size={52} tone="light" />
           <div className="leading-tight">
-            <div className="text-xl font-semibold tracking-tight">Gestão UBS</div>
+            <div className="text-xl font-semibold tracking-tight">Gestão Hospitalar</div>
             <div className="text-xs font-medium uppercase tracking-[0.2em] text-white/60">
               Painel de chamada
             </div>
           </div>
+          {sessionUser ? (
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="ml-4 rounded-lg bg-white/10 px-3 py-2 text-xs font-medium text-white/85 ring-1 ring-white/20 transition hover:bg-white/20 hover:text-white"
+              title="Voltar para o sistema"
+            >
+              ← Voltar ao sistema
+            </button>
+          ) : null}
         </div>
         <div className="flex items-center gap-4 text-right">
           <div>

@@ -8,10 +8,15 @@ import { UpdateBanner } from '@renderer/components/UpdateBanner'
 import type { UserRole } from '@shared/types'
 
 interface NavItem {
+  /** Caminho de rota interna. Quando `action` é definido, este valor é
+   *  ignorado para navegação — só serve como key. */
   to: string
   label: string
   icon: React.ReactNode
   roles?: UserRole[]
+  /** Se definido, o item vira botão que executa a ação ao invés de
+   *  navegar. Usado pelo "Painel de Chamadas" que abre em janela nova. */
+  action?: () => void | Promise<void>
 }
 
 /** Ícones inline (stroke) — estética empresarial, sem emoji. */
@@ -378,7 +383,18 @@ const GROUPS: NavGroup[] = [
         icon: Icon.stethoscope,
         roles: ['admin', 'enfermagem', 'medico']
       },
-      { to: '/painel', label: 'Painel de Chamadas', icon: Icon.monitor }
+      {
+        to: 'painel-action',
+        label: 'Painel de Chamadas',
+        icon: Icon.monitor,
+        roles: ['admin', 'recepcao', 'enfermagem', 'medico'],
+        action: () => {
+          void window.api.panel.open('/painel').catch(() => {
+            // fallback: se falhar abrir janela nova, navega na mesma
+            window.location.hash = '#/painel'
+          })
+        }
+      }
     ]
   },
   {
@@ -501,19 +517,33 @@ export function Layout(): React.JSX.Element {
                 <div className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/40">
                   {group.category}
                 </div>
-                {visible.map((item) => (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    end={item.to === '/'}
-                    className={({ isActive }) => cn('app-nav-link', isActive && 'is-active')}
-                  >
-                    <span className="flex h-6 w-6 flex-none items-center justify-center">
-                      {item.icon}
-                    </span>
-                    <span>{item.label}</span>
-                  </NavLink>
-                ))}
+                {visible.map((item) =>
+                  item.action ? (
+                    <button
+                      key={item.to}
+                      type="button"
+                      onClick={() => void item.action!()}
+                      className="app-nav-link w-full text-left"
+                    >
+                      <span className="flex h-6 w-6 flex-none items-center justify-center">
+                        {item.icon}
+                      </span>
+                      <span>{item.label}</span>
+                    </button>
+                  ) : (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      end={item.to === '/'}
+                      className={({ isActive }) => cn('app-nav-link', isActive && 'is-active')}
+                    >
+                      <span className="flex h-6 w-6 flex-none items-center justify-center">
+                        {item.icon}
+                      </span>
+                      <span>{item.label}</span>
+                    </NavLink>
+                  )
+                )}
               </div>
             )
           })}
