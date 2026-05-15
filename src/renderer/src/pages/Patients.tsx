@@ -28,12 +28,14 @@ export function PatientsPage(): React.JSX.Element {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return patients
+    // CPF/CNS são armazenados como dígitos puros — se o usuário digitar com
+    // separadores ("111.222.333-96"), removemos para casar.
+    const digits = q.replace(/\D/g, '')
     return patients.filter((p) => {
-      return (
-        p.fullName.toLowerCase().includes(q) ||
-        (p.cpf ?? '').includes(q) ||
-        (p.cns ?? '').includes(q)
-      )
+      if (p.fullName.toLowerCase().includes(q)) return true
+      if (digits && (p.cpf ?? '').includes(digits)) return true
+      if (digits && (p.cns ?? '').includes(digits)) return true
+      return false
     })
   }, [patients, query])
 

@@ -79,7 +79,13 @@ export function listPatients(): Patient[] {
 }
 
 export function searchPatients(query: string, limit = 50): Patient[] {
-  const q = `%${query.trim()}%`
+  // CPF e CNS são armazenados como dígitos puros (sem formatação). Se o
+  // usuário digitar "111.222.333-96" ou "111 222 333 96", removemos os
+  // separadores para casar. A busca por nome continua com a string original.
+  const raw = query.trim()
+  const nameQ = `%${raw}%`
+  const digitsOnly = raw.replace(/\D/g, '')
+  const docQ = digitsOnly.length > 0 ? `%${digitsOnly}%` : nameQ
   const rows = getDb()
     .prepare(
       `SELECT * FROM patients
@@ -89,7 +95,7 @@ export function searchPatients(query: string, limit = 50): Patient[] {
         ORDER BY full_name
         LIMIT ?`
     )
-    .all(q, q, q, limit) as Row[]
+    .all(nameQ, docQ, docQ, limit) as Row[]
   return rows.map(toModel)
 }
 
