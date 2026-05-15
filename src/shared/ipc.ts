@@ -253,6 +253,12 @@ export const IPC = {
     setBoot: 'client:set-boot',
     ping: 'client:ping'
   },
+  drive: {
+    status: 'drive:status',
+    connect: 'drive:connect',
+    disconnect: 'drive:disconnect',
+    backupNow: 'drive:backup-now'
+  },
   updater: {
     check: 'updater:check',
     quitAndInstall: 'updater:quit-and-install',

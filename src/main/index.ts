@@ -84,6 +84,16 @@ app.whenReady().then(async () => {
         console.error('[server] falha ao iniciar HTTP API:', err)
       }
     }
+
+    if (settings.driveAutoEnabled && settings.driveRefreshToken) {
+      try {
+        const { startDailyScheduler } = await import('./drive')
+        startDailyScheduler()
+        console.log('[drive] scheduler diário ativado')
+      } catch (err) {
+        console.error('[drive] falha ao iniciar scheduler:', err)
+      }
+    }
   }
 
   createWindow()

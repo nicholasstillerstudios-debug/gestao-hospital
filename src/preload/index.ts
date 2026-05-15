@@ -575,6 +575,19 @@ const api = {
     ping: (url: string): Promise<{ ok: boolean; version?: string; error?: string }> =>
       invoke(IPC.client.ping, url)
   },
+  drive: {
+    status: (): Promise<{
+      configured: boolean
+      connected: boolean
+      folderId: string | null
+      lastBackupAt: string | null
+      autoEnabled: boolean
+    }> => invoke(IPC.drive.status),
+    connect: (): Promise<{ connected: true }> => invoke(IPC.drive.connect),
+    disconnect: (): Promise<{ ok: true }> => invoke(IPC.drive.disconnect),
+    backupNow: (): Promise<{ ok: true; fileId: string; size: number }> =>
+      invoke(IPC.drive.backupNow)
+  },
   updater: {
     check: (): Promise<UpdaterStatus> => invoke(IPC.updater.check),
     state: (): Promise<UpdaterStatus> => invoke(IPC.updater.state),

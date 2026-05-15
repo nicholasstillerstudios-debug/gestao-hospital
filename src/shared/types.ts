@@ -490,6 +490,17 @@ export interface AppSettings {
   runMode: RunMode
   /** Porta TCP em que o servidor escuta (apenas runMode=server). */
   serverPort: number
+  /** Backup Google Drive — credenciais OAuth Web App do tipo "Desktop". */
+  driveClientId: string
+  driveClientSecret: string
+  /** Refresh token obtido após conectar; "" = não conectado. */
+  driveRefreshToken: string
+  /** ID da pasta no Drive onde os backups são gravados. */
+  driveFolderId: string
+  /** ISO-8601 do último upload bem-sucedido. */
+  driveLastBackupAt: string
+  /** Backup diário automático ligado. */
+  driveAutoEnabled: boolean
 }
 
 export type RunMode = 'standalone' | 'server' | 'client'

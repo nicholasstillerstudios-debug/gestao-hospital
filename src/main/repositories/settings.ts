@@ -25,7 +25,13 @@ const DEFAULTS: AppSettings = {
   themePrimary: DEFAULT_PRIMARY,
   themeMode: 'light',
   runMode: 'standalone',
-  serverPort: 7321
+  serverPort: 7321,
+  driveClientId: '',
+  driveClientSecret: '',
+  driveRefreshToken: '',
+  driveFolderId: '',
+  driveLastBackupAt: '',
+  driveAutoEnabled: false
 }
 
 function parseRunMode(raw: string | undefined): RunMode {
@@ -47,7 +53,12 @@ const STRING_KEYS: Array<keyof AppSettings> = [
   'brandingLogoSecretariaFile',
   'brandingLogoHospitalFile',
   'brandingPrefeituraName',
-  'brandingSecretariaName'
+  'brandingSecretariaName',
+  'driveClientId',
+  'driveClientSecret',
+  'driveRefreshToken',
+  'driveFolderId',
+  'driveLastBackupAt'
 ]
 
 function readString(map: Map<string, string>, key: keyof AppSettings, fallback: string): string {
@@ -86,7 +97,13 @@ export function getSettings(): AppSettings {
     themePrimary: themePrimary && isValidHex(themePrimary) ? themePrimary : DEFAULT_PRIMARY,
     themeMode: themeMode === 'dark' ? 'dark' : 'light',
     runMode: parseRunMode(map.get('runMode')),
-    serverPort: parsePort(map.get('serverPort'))
+    serverPort: parsePort(map.get('serverPort')),
+    driveClientId: readString(map, 'driveClientId', ''),
+    driveClientSecret: readString(map, 'driveClientSecret', ''),
+    driveRefreshToken: readString(map, 'driveRefreshToken', ''),
+    driveFolderId: readString(map, 'driveFolderId', ''),
+    driveLastBackupAt: readString(map, 'driveLastBackupAt', ''),
+    driveAutoEnabled: map.get('driveAutoEnabled') === '1'
   }
 }
 
@@ -139,6 +156,9 @@ export function updateSettings(input: Partial<AppSettings>): AppSettings {
         })
       }
       stmt.run('serverPort', String(p))
+    }
+    if (input.driveAutoEnabled != null) {
+      stmt.run('driveAutoEnabled', input.driveAutoEnabled ? '1' : '0')
     }
   })
   tx()

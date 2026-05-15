@@ -125,6 +125,27 @@ export function registerIpcHandlers(): void {
     return await pingServer(String(url))
   })
 
+  // ---------- Drive backup (Google) ----------
+  registerHandler(IPC.drive.status, async () => {
+    const drive = await import('./drive')
+    return drive.driveStatus()
+  })
+  registerHandler(IPC.drive.connect, async () => {
+    requireRole('admin')
+    const drive = await import('./drive')
+    return await drive.connectDrive()
+  })
+  registerHandler(IPC.drive.disconnect, async () => {
+    requireRole('admin')
+    const drive = await import('./drive')
+    return drive.disconnectDrive()
+  })
+  registerHandler(IPC.drive.backupNow, async () => {
+    requireRole('admin')
+    const drive = await import('./drive')
+    return await drive.uploadBackup()
+  })
+
   // ---------- Auth ----------
   registerHandler(IPC.auth.login, (username: unknown, password: unknown) => {
     const user = usersRepo.verifyLogin(String(username), String(password))

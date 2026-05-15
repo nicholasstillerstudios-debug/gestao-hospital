@@ -1018,6 +1018,26 @@ const MIGRATIONS: Migration[] = [
       INSERT OR IGNORE INTO app_settings (key, value, updated_at)
         VALUES ('serverPort', '7321', datetime('now'));
     `
+  },
+  {
+    id: 17,
+    name: 'drive_backup',
+    sql: `
+      -- Backup Google Drive: as credenciais OAuth (Client ID/Secret) e o
+      -- refresh token são gravados em app_settings (KV). Inicializa vazios.
+      INSERT OR IGNORE INTO app_settings (key, value, updated_at)
+        VALUES ('driveClientId', '', datetime('now'));
+      INSERT OR IGNORE INTO app_settings (key, value, updated_at)
+        VALUES ('driveClientSecret', '', datetime('now'));
+      INSERT OR IGNORE INTO app_settings (key, value, updated_at)
+        VALUES ('driveRefreshToken', '', datetime('now'));
+      INSERT OR IGNORE INTO app_settings (key, value, updated_at)
+        VALUES ('driveFolderId', '', datetime('now'));
+      INSERT OR IGNORE INTO app_settings (key, value, updated_at)
+        VALUES ('driveLastBackupAt', '', datetime('now'));
+      INSERT OR IGNORE INTO app_settings (key, value, updated_at)
+        VALUES ('driveAutoEnabled', '0', datetime('now'));
+    `
   }
 ]
 

@@ -961,6 +961,186 @@ function BackupTab(): React.JSX.Element {
           </ul>
         )}
       </div>
+
+      <DriveCloudCard />
+    </div>
+  )
+}
+
+function DriveCloudCard(): React.JSX.Element {
+  const [clientId, setClientId] = useState('')
+  const [clientSecret, setClientSecret] = useState('')
+  const [autoEnabled, setAutoEnabled] = useState(false)
+  const [status, setStatus] = useState<{
+    configured: boolean
+    connected: boolean
+    folderId: string | null
+    lastBackupAt: string | null
+    autoEnabled: boolean
+  } | null>(null)
+  const [busy, setBusy] = useState<'idle' | 'saving' | 'connecting' | 'backup' | 'disconnect'>(
+    'idle'
+  )
+  const [notice, setNotice] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const reload = async (): Promise<void> => {
+    const [s, st] = await Promise.all([window.api.settings.get(), window.api.drive.status()])
+    setClientId(s.driveClientId)
+    setClientSecret(s.driveClientSecret)
+    setAutoEnabled(s.driveAutoEnabled)
+    setStatus(st)
+  }
+
+  useEffect(() => {
+    void reload()
+  }, [])
+
+  const saveCreds = async (): Promise<void> => {
+    setBusy('saving')
+    setError(null)
+    setNotice(null)
+    try {
+      await window.api.settings.update({
+        driveClientId: clientId.trim(),
+        driveClientSecret: clientSecret.trim(),
+        driveAutoEnabled: autoEnabled
+      })
+      setNotice('Credenciais salvas.')
+      await reload()
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setBusy('idle')
+    }
+  }
+
+  const connect = async (): Promise<void> => {
+    setBusy('connecting')
+    setError(null)
+    setNotice(null)
+    try {
+      await window.api.drive.connect()
+      setNotice('Drive conectado.')
+      await reload()
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setBusy('idle')
+    }
+  }
+
+  const disconnect = async (): Promise<void> => {
+    setBusy('disconnect')
+    try {
+      await window.api.drive.disconnect()
+      await reload()
+    } finally {
+      setBusy('idle')
+    }
+  }
+
+  const backupNow = async (): Promise<void> => {
+    setBusy('backup')
+    setError(null)
+    setNotice(null)
+    try {
+      const r = await window.api.drive.backupNow()
+      setNotice(`Backup enviado (${(r.size / 1024).toFixed(1)} KB).`)
+      await reload()
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setBusy('idle')
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 className="text-sm font-semibold text-slate-700">Backup em nuvem (Google Drive)</h2>
+      <p className="mt-1 max-w-2xl text-xs text-slate-600">
+        Use credenciais OAuth do seu próprio projeto no{' '}
+        <a
+          href="https://console.cloud.google.com/apis/credentials"
+          className="text-cyan-700 underline"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Google Cloud Console
+        </a>
+        . Tipo: <em>Desktop app</em>. Escopo: <code className="rounded bg-slate-100 px-1">drive.file</code>.
+        Os backups são enviados criptografados pelo HTTPS para uma pasta dedicada no seu Drive.
+      </p>
+
+      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+        <Field label="Client ID">
+          <Input
+            value={clientId}
+            onChange={(e) => setClientId(e.target.value)}
+            placeholder="xxx.apps.googleusercontent.com"
+          />
+        </Field>
+        <Field label="Client Secret">
+          <Input
+            type="password"
+            value={clientSecret}
+            onChange={(e) => setClientSecret(e.target.value)}
+          />
+        </Field>
+      </div>
+
+      <label className="mt-3 flex items-center gap-2 text-sm text-slate-700">
+        <input
+          type="checkbox"
+          checked={autoEnabled}
+          onChange={(e) => setAutoEnabled(e.target.checked)}
+        />
+        Backup diário automático (a cada 24h se houver alteração)
+      </label>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <Button onClick={() => void saveCreds()} disabled={busy !== 'idle'}>
+          {busy === 'saving' ? 'Salvando…' : 'Salvar credenciais'}
+        </Button>
+        {status?.configured && !status?.connected ? (
+          <Button variant="outline" onClick={() => void connect()} disabled={busy !== 'idle'}>
+            {busy === 'connecting' ? 'Aguardando autorização no navegador…' : 'Conectar ao Drive'}
+          </Button>
+        ) : null}
+        {status?.connected ? (
+          <>
+            <Button variant="outline" onClick={() => void backupNow()} disabled={busy !== 'idle'}>
+              {busy === 'backup' ? 'Enviando…' : 'Enviar backup agora'}
+            </Button>
+            <Button variant="ghost" onClick={() => void disconnect()} disabled={busy !== 'idle'}>
+              Desconectar
+            </Button>
+          </>
+        ) : null}
+      </div>
+
+      {status ? (
+        <div className="mt-3 text-xs text-slate-600">
+          <strong>Status:</strong>{' '}
+          {!status.configured
+            ? 'sem credenciais'
+            : !status.connected
+              ? 'configurado mas não conectado'
+              : 'conectado'}
+          {status.lastBackupAt ? ` · último backup ${formatDateTimeBr(status.lastBackupAt)}` : ''}
+        </div>
+      ) : null}
+
+      {notice ? (
+        <div className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700 ring-1 ring-emerald-200">
+          {notice}
+        </div>
+      ) : null}
+      {error ? (
+        <div className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200">
+          {error}
+        </div>
+      ) : null}
     </div>
   )
 }
