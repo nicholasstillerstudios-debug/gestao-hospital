@@ -981,6 +981,20 @@ const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_timeclock_recorded
         ON timeclock_entries(recorded_at);
     `
+  },
+  {
+    id: 15,
+    name: 'rename_branding_ubs_to_hospital',
+    sql: `
+      -- Renomeia a chave brandingLogoUbsFile → brandingLogoHospitalFile.
+      -- Em deploys antigos (gestao-ubs) a chave era brandingLogoUbsFile;
+      -- como o produto agora é Gestão Hospitalar, o slot foi renomeado
+      -- para 'hospital'. Copiamos o valor e removemos a chave antiga.
+      INSERT OR IGNORE INTO app_settings (key, value, updated_at)
+        SELECT 'brandingLogoHospitalFile', value, datetime('now')
+          FROM app_settings WHERE key = 'brandingLogoUbsFile';
+      DELETE FROM app_settings WHERE key = 'brandingLogoUbsFile';
+    `
   }
 ]
 

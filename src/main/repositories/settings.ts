@@ -19,7 +19,7 @@ const DEFAULTS: AppSettings = {
   unitMunicipality: '',
   brandingLogoPrefeituraFile: '',
   brandingLogoSecretariaFile: '',
-  brandingLogoUbsFile: '',
+  brandingLogoHospitalFile: '',
   brandingPrefeituraName: '',
   brandingSecretariaName: '',
   themePrimary: DEFAULT_PRIMARY,
@@ -34,7 +34,7 @@ const STRING_KEYS: Array<keyof AppSettings> = [
   'unitMunicipality',
   'brandingLogoPrefeituraFile',
   'brandingLogoSecretariaFile',
-  'brandingLogoUbsFile',
+  'brandingLogoHospitalFile',
   'brandingPrefeituraName',
   'brandingSecretariaName'
 ]
@@ -69,7 +69,7 @@ export function getSettings(): AppSettings {
     unitMunicipality: readString(map, 'unitMunicipality', DEFAULTS.unitMunicipality),
     brandingLogoPrefeituraFile: readString(map, 'brandingLogoPrefeituraFile', ''),
     brandingLogoSecretariaFile: readString(map, 'brandingLogoSecretariaFile', ''),
-    brandingLogoUbsFile: readString(map, 'brandingLogoUbsFile', ''),
+    brandingLogoHospitalFile: readString(map, 'brandingLogoHospitalFile', ''),
     brandingPrefeituraName: readString(map, 'brandingPrefeituraName', ''),
     brandingSecretariaName: readString(map, 'brandingSecretariaName', ''),
     themePrimary: themePrimary && isValidHex(themePrimary) ? themePrimary : DEFAULT_PRIMARY,

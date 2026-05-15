@@ -6,7 +6,10 @@ import { logAudit } from '../audit'
 import { getSettings, updateSettings } from './settings'
 import type { AppSettings, BrandingLogoSlot, BrandingLogos } from '@shared/types'
 
-type LogoKey = 'brandingLogoPrefeituraFile' | 'brandingLogoSecretariaFile' | 'brandingLogoUbsFile'
+type LogoKey =
+  | 'brandingLogoPrefeituraFile'
+  | 'brandingLogoSecretariaFile'
+  | 'brandingLogoHospitalFile'
 
 const ALLOWED_EXT = new Set(['.png', '.jpg', '.jpeg', '.svg'])
 const ALLOWED_MIME = new Set(['image/png', 'image/jpeg', 'image/svg+xml'])
@@ -15,7 +18,7 @@ const MAX_BYTES = 2 * 1024 * 1024 // 2 MB
 const SLOT_TO_KEY: Record<BrandingLogoSlot, LogoKey> = {
   prefeitura: 'brandingLogoPrefeituraFile',
   secretaria: 'brandingLogoSecretariaFile',
-  ubs: 'brandingLogoUbsFile'
+  hospital: 'brandingLogoHospitalFile'
 }
 
 function brandingDir(): string {
@@ -45,7 +48,7 @@ function safeDeleteInDir(dir: string, filename: string): void {
 }
 
 function isValidSlot(slot: string): slot is BrandingLogoSlot {
-  return slot === 'prefeitura' || slot === 'secretaria' || slot === 'ubs'
+  return slot === 'prefeitura' || slot === 'secretaria' || slot === 'hospital'
 }
 
 function detectExtension(filename: string, mimeType: string): string {
@@ -150,6 +153,6 @@ export function getLogos(): BrandingLogos {
   return {
     prefeitura: readAsDataUrl(s.brandingLogoPrefeituraFile),
     secretaria: readAsDataUrl(s.brandingLogoSecretariaFile),
-    ubs: readAsDataUrl(s.brandingLogoUbsFile)
+    hospital: readAsDataUrl(s.brandingLogoHospitalFile)
   }
 }

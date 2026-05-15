@@ -1,10 +1,9 @@
 /**
  * Logo institucional do Gestão Hospitalar.
  *
- * Usa a cor primária atual (`--color-ubs-primary`, mantida com o nome legado
- * por compatibilidade do tema) como base do gradiente, então o logo se ajusta
- * automaticamente quando o usuário troca o tema. `tone="light"` inverte cores
- * (base translúcida branca) para superfícies escuras.
+ * Quadrado arredondado em gradiente cyan, cruz médica branca e linha de
+ * pulso ECG. `tone="light"` inverte para superfícies escuras (sidebar dark,
+ * tela de login). É um SVG inline para escalar sem perder nitidez.
  */
 interface Props {
   /** Tamanho em pixels (largura = altura). */
@@ -22,18 +21,32 @@ export function BrandLogo({
   title = 'Gestão Hospitalar'
 }: Props): React.JSX.Element {
   const id = `brand-logo-${tone}`
-  const gradId = `${id}-grad`
-  const base = tone === 'light' ? 'rgba(255,255,255,0.16)' : 'var(--color-ubs-primary)'
-  const top = tone === 'light' ? 'rgba(255,255,255,0.28)' : 'var(--color-ubs-primary)'
-  const bottom = tone === 'light' ? 'rgba(255,255,255,0.10)' : 'var(--color-ubs-primary-dark)'
-  const cross = tone === 'light' ? '#ffffff' : '#ffffff'
-  const pulse = tone === 'light' ? 'rgba(255,255,255,0.85)' : '#e0f7ff'
-  const ring = tone === 'light' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.55)'
+  const bgGrad = `${id}-bg`
+  const crossGrad = `${id}-cross`
+
+  // Cores: brand usa o gradiente cyan oficial; light fica translúcido para
+  // funcionar sobre o sidebar escuro/azul-marinho do app.
+  const bgStops =
+    tone === 'light'
+      ? [
+          { offset: '0%', color: 'rgba(255,255,255,0.22)' },
+          { offset: '100%', color: 'rgba(255,255,255,0.06)' }
+        ]
+      : [
+          { offset: '0%', color: '#22d3ee' },
+          { offset: '55%', color: '#0891b2' },
+          { offset: '100%', color: '#0e7490' }
+        ]
+  const ring = tone === 'light' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.22)'
+  const crossTop = '#ffffff'
+  const crossBottom = tone === 'light' ? 'rgba(255,255,255,0.92)' : '#e0f7ff'
+  const pulseBack = tone === 'light' ? 'rgba(255,255,255,0.55)' : '#0e7490'
+  const pulseFront = tone === 'light' ? '#ffffff' : '#ffffff'
 
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 40 40"
+      viewBox="0 0 512 512"
       width={size}
       height={size}
       role="img"
@@ -42,38 +55,53 @@ export function BrandLogo({
     >
       <title>{title}</title>
       <defs>
-        <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor={top} />
-          <stop offset="100%" stopColor={bottom} />
+        <linearGradient id={bgGrad} x1="0" y1="0" x2="1" y2="1">
+          {bgStops.map((s, i) => (
+            <stop key={i} offset={s.offset} stopColor={s.color} />
+          ))}
+        </linearGradient>
+        <linearGradient id={crossGrad} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={crossTop} />
+          <stop offset="100%" stopColor={crossBottom} />
         </linearGradient>
       </defs>
-      {/* Container (escudo arredondado) */}
+
+      {/* Fundo arredondado */}
+      <rect x="16" y="16" width="480" height="480" rx="96" ry="96" fill={`url(#${bgGrad})`} />
       <rect
-        x="1.5"
-        y="1.5"
-        width="37"
-        height="37"
-        rx="9.5"
-        ry="9.5"
-        fill={tone === 'light' ? base : `url(#${gradId})`}
-        stroke={ring}
-        strokeWidth="1"
-      />
-      {/* Cruz médica */}
-      <path
-        d="M22.6 8.5h-5.2a1.2 1.2 0 0 0-1.2 1.2v5.3H10.9a1.2 1.2 0 0 0-1.2 1.2v5.2a1.2 1.2 0 0 0 1.2 1.2h5.3V28a1.2 1.2 0 0 0 1.2 1.2h5.2A1.2 1.2 0 0 0 23.8 28v-5.4h5.3a1.2 1.2 0 0 0 1.2-1.2v-5.2a1.2 1.2 0 0 0-1.2-1.2h-5.3V9.7a1.2 1.2 0 0 0-1.2-1.2Z"
-        fill={cross}
-        opacity={tone === 'light' ? 0.92 : 1}
-      />
-      {/* Linha de pulso (ECG) sobreposta, sutil */}
-      <path
-        d="M6 26.5h5.2l1.6-3 2.4 6 2.2-4.4 1.6 2.4h15"
+        x="20"
+        y="20"
+        width="472"
+        height="472"
+        rx="92"
+        ry="92"
         fill="none"
-        stroke={pulse}
-        strokeWidth="1.25"
+        stroke={ring}
+        strokeWidth="2"
+      />
+
+      {/* Cruz médica */}
+      <rect x="216" y="104" width="80" height="304" rx="20" ry="20" fill={`url(#${crossGrad})`} />
+      <rect x="104" y="216" width="304" height="80" rx="20" ry="20" fill={`url(#${crossGrad})`} />
+
+      {/* Linha de pulso (ECG) */}
+      <path
+        d="M 80 256 L 168 256 L 192 224 L 224 296 L 256 200 L 288 296 L 320 224 L 344 256 L 432 256"
+        fill="none"
+        stroke={pulseBack}
+        strokeWidth="14"
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity="0.55"
+        strokeOpacity="0.95"
+      />
+      <path
+        d="M 80 256 L 168 256 L 192 224 L 224 296 L 256 200 L 288 296 L 320 224 L 344 256 L 432 256"
+        fill="none"
+        stroke={pulseFront}
+        strokeWidth="5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeOpacity="0.9"
       />
     </svg>
   )

@@ -23,7 +23,7 @@ interface UnitInfo {
 interface BrandingLogosState {
   prefeitura: string | null
   secretaria: string | null
-  ubs: string | null
+  hospital: string | null
 }
 
 const EMPTY_UNIT: UnitInfo = {
@@ -36,7 +36,7 @@ const EMPTY_UNIT: UnitInfo = {
   brandingSecretariaName: ''
 }
 
-const EMPTY_LOGOS: BrandingLogosState = { prefeitura: null, secretaria: null, ubs: null }
+const EMPTY_LOGOS: BrandingLogosState = { prefeitura: null, secretaria: null, hospital: null }
 
 interface PrintData {
   appointment: AppointmentWithRefs
@@ -559,7 +559,7 @@ function PrintHeader({
   logos: BrandingLogosState
 }): React.JSX.Element {
   const hasUnit = unit.unitName.trim().length > 0
-  const hasAnyLogo = logos.prefeitura || logos.secretaria || logos.ubs
+  const hasAnyLogo = logos.prefeitura || logos.secretaria || logos.hospital
   const prefeituraText = unit.brandingPrefeituraName || 'PREFEITURA MUNICIPAL'
   const secretariaText = unit.brandingSecretariaName || 'SECRETARIA MUNICIPAL DE SAÚDE'
   const unidadeText = hasUnit ? unit.unitName : 'UNIDADE BÁSICA DE SAÚDE'
@@ -576,7 +576,7 @@ function PrintHeader({
               {logos.secretaria ? <img src={logos.secretaria} alt="Logo Secretaria" /> : null}
             </div>
             <div className="print-letterhead-logo">
-              {logos.ubs ? <img src={logos.ubs} alt="Logo UBS / SUS" /> : null}
+              {logos.hospital ? <img src={logos.hospital} alt="Logo do Hospital" /> : null}
             </div>
           </div>
           <div className="print-letterhead-text">

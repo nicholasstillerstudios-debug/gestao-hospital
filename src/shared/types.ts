@@ -447,7 +447,7 @@ export interface AppSettings {
   /** Branding (papel timbrado): nome do arquivo dentro de userData/branding/ */
   brandingLogoPrefeituraFile: string
   brandingLogoSecretariaFile: string
-  brandingLogoUbsFile: string
+  brandingLogoHospitalFile: string
   /** Texto institucional opcional, ex.: "PREFEITURA MUNICIPAL DE X" */
   brandingPrefeituraName: string
   brandingSecretariaName: string
@@ -458,12 +458,12 @@ export interface AppSettings {
 
 export type ThemeMode = 'light' | 'dark'
 
-export type BrandingLogoSlot = 'prefeitura' | 'secretaria' | 'ubs'
+export type BrandingLogoSlot = 'prefeitura' | 'secretaria' | 'hospital'
 
 export interface BrandingLogos {
   prefeitura: string | null
   secretaria: string | null
-  ubs: string | null
+  hospital: string | null
 }
 
 export interface PatientDataExport {

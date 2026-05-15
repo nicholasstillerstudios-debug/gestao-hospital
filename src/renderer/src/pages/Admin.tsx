@@ -1109,7 +1109,11 @@ const LOGO_SLOTS: LogoSlotConfig[] = [
     label: 'Logo da Secretaria de Saúde',
     hint: 'Logotipo da secretaria municipal de saúde.'
   },
-  { slot: 'ubs', label: 'Logo da UBS / SUS', hint: 'Logotipo da unidade ou logo do SUS.' }
+  {
+    slot: 'hospital',
+    label: 'Logo do Hospital',
+    hint: 'Logotipo da unidade hospitalar.'
+  }
 ]
 
 function AppearanceTab(): React.JSX.Element {
@@ -1121,7 +1125,7 @@ function AppearanceTab(): React.JSX.Element {
   const [logos, setLogos] = useState<BrandingLogos>({
     prefeitura: null,
     secretaria: null,
-    ubs: null
+    hospital: null
   })
   const [prefeituraName, setPrefeituraName] = useState('')
   const [secretariaName, setSecretariaName] = useState('')

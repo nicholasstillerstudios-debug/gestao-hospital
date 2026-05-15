@@ -56,7 +56,7 @@ describe('Branding: upload e remoção de logos', () => {
     })
     expect(result.prefeitura).toMatch(/^data:image\/png;base64,/)
     expect(result.secretaria).toBeNull()
-    expect(result.ubs).toBeNull()
+    expect(result.hospital).toBeNull()
 
     const dir = join(tempDir, 'branding')
     expect(existsSync(dir)).toBe(true)
@@ -84,7 +84,7 @@ describe('Branding: upload e remoção de logos', () => {
     const big = Buffer.alloc(3 * 1024 * 1024, 0)
     expect(() =>
       branding.uploadLogo({
-        slot: 'ubs',
+        slot: 'hospital',
         filename: 'huge.png',
         mimeType: 'image/png',
         bytes: big
@@ -116,13 +116,13 @@ describe('Branding: upload e remoção de logos', () => {
     await freshDb()
     const branding = await import('../src/main/repositories/branding')
     branding.uploadLogo({
-      slot: 'ubs',
+      slot: 'hospital',
       filename: 'c.png',
       mimeType: 'image/png',
       bytes: PNG_1x1
     })
-    const after = branding.removeLogo('ubs')
-    expect(after.ubs).toBeNull()
+    const after = branding.removeLogo('hospital')
+    expect(after.hospital).toBeNull()
     const files = readdirSync(join(tempDir, 'branding'))
     expect(files.length).toBe(0)
   })
@@ -137,7 +137,7 @@ describe('Branding: upload e remoção de logos', () => {
       bytes: PNG_1x1
     })
     branding.uploadLogo({
-      slot: 'ubs',
+      slot: 'hospital',
       filename: 'u.png',
       mimeType: 'image/png',
       bytes: PNG_1x1
@@ -145,7 +145,7 @@ describe('Branding: upload e remoção de logos', () => {
     const logos = branding.getLogos()
     expect(logos.prefeitura).toMatch(/^data:image\/png;/)
     expect(logos.secretaria).toBeNull()
-    expect(logos.ubs).toMatch(/^data:image\/png;/)
+    expect(logos.hospital).toMatch(/^data:image\/png;/)
   })
 })
 

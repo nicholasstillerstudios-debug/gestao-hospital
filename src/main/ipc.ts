@@ -339,7 +339,7 @@ export function registerIpcHandlers(): void {
   registerHandler(IPC.branding.uploadLogo, (input: unknown) => {
     requireRole('admin')
     const i = input as {
-      slot: 'prefeitura' | 'secretaria' | 'ubs'
+      slot: 'prefeitura' | 'secretaria' | 'hospital'
       filename: string
       mimeType: string
       bytes: ArrayBuffer | Uint8Array
@@ -349,7 +349,7 @@ export function registerIpcHandlers(): void {
 
   registerHandler(IPC.branding.removeLogo, (slot: unknown) => {
     requireRole('admin')
-    return brandingRepo.removeLogo(slot as 'prefeitura' | 'secretaria' | 'ubs')
+    return brandingRepo.removeLogo(slot as 'prefeitura' | 'secretaria' | 'hospital')
   })
 
   // Logos como data URLs: qualquer usuário autenticado pode ler (usadas no header
