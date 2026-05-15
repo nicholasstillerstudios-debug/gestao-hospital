@@ -18,7 +18,7 @@ import type {
   User,
   UserRole
 } from '@shared/types'
-import { UNIT_TYPE_LABELS } from '@shared/types'
+import { UNIT_TYPE_LABELS, UNIT_TYPE_ORDER, USER_ROLE_DESCRIPTIONS } from '@shared/types'
 import { useTheme, THEME_PRESETS, type ThemePreset } from '@renderer/stores/theme'
 import { useUnit } from '@renderer/stores/unit'
 import {
@@ -266,12 +266,12 @@ function UserModal({
     setError(null)
     try {
       if (mode === 'create') {
-        if (password.length < 6) throw new Error('Senha mínima: 6 caracteres')
+        if (password.length < 8) throw new Error('Senha mínima: 8 caracteres com letras e números.')
         await window.api.users.create({ username, password, fullName, role })
       } else if (mode === 'edit' && user) {
         await window.api.users.update(user.id, { fullName, role })
       } else if (mode === 'reset' && user) {
-        if (password.length < 6) throw new Error('Senha mínima: 6 caracteres')
+        if (password.length < 8) throw new Error('Senha mínima: 8 caracteres com letras e números.')
         await window.api.users.resetPassword(user.id, password)
       }
       onSaved()
@@ -312,13 +312,15 @@ function UserModal({
             <Field label="Nome completo" required>
               <Input value={fullName} onChange={(e) => setFullName(e.target.value)} required />
             </Field>
-            <Field label="Perfil" required>
+            <Field label="Perfil de acesso" required hint={USER_ROLE_DESCRIPTIONS[role]}>
               <Select value={role} onChange={(e) => setRole(e.target.value as UserRole)}>
-                <option value="admin">Administrador</option>
-                <option value="recepcao">Recepção</option>
-                <option value="enfermagem">Enfermagem</option>
-                <option value="medico">Médico(a)</option>
-                <option value="farmacia">Farmácia</option>
+                <option value="admin">Administrador(a) — acesso total</option>
+                <option value="recepcao">Recepção — cadastro, agenda, check-in</option>
+                <option value="enfermagem">
+                  Enfermagem — triagem, sinais vitais, evolução, MAR
+                </option>
+                <option value="medico">Médico(a) — prescrição, cirurgia, alta</option>
+                <option value="farmacia">Farmácia — estoque e dispensação</option>
               </Select>
             </Field>
           </>
@@ -327,7 +329,7 @@ function UserModal({
           <Field
             label={mode === 'reset' ? 'Nova senha' : 'Senha inicial'}
             required
-            hint="Mínimo 6 caracteres. O usuário será obrigado a trocar no próximo login."
+            hint="Mínimo 8 caracteres, com letras e números. O usuário será obrigado a trocar no próximo login."
           >
             <Input
               type="password"
@@ -1028,7 +1030,7 @@ function UnitTab(): React.JSX.Element {
           <Input
             value={unitName}
             onChange={(e) => setUnitName(e.target.value)}
-            placeholder="Ex.: UBS Vila Nova"
+            placeholder="Ex.: Hospital Municipal Dr. José da Silva"
           />
         </Field>
         <Field label="CNES">
@@ -1062,10 +1064,10 @@ function UnitTab(): React.JSX.Element {
         <Field
           className="md:col-span-2"
           label="Tipo de unidade"
-          hint="Controla quais módulos aparecem no menu lateral. Hospital adiciona Leitos e Internações."
+          hint="Define quais módulos aparecem no menu. Hospital habilita leitos, internações, PS, centro cirúrgico e CCIH."
         >
           <Select value={unitType} onChange={(e) => setUnitTypeState(e.target.value as UnitType)}>
-            {(Object.keys(UNIT_TYPE_LABELS) as UnitType[]).map((u) => (
+            {UNIT_TYPE_ORDER.map((u) => (
               <option key={u} value={u}>
                 {UNIT_TYPE_LABELS[u]}
               </option>

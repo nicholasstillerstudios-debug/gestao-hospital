@@ -3,6 +3,35 @@ import { getDb } from '../db'
 import { logAudit } from '../audit'
 import type { AuthUser, User, UserRole } from '@shared/types'
 
+const PASSWORD_MIN_LENGTH = 8
+const USERNAME_REGEX = /^[a-z][a-z0-9._-]{2,31}$/i
+
+function assertPasswordStrong(pw: string): void {
+  if (typeof pw !== 'string' || pw.length < PASSWORD_MIN_LENGTH) {
+    throw Object.assign(
+      new Error(`A senha deve ter pelo menos ${PASSWORD_MIN_LENGTH} caracteres.`),
+      { code: 'PASSWORD_TOO_SHORT' }
+    )
+  }
+  // Heurística básica — exige letra + dígito para evitar "12345678".
+  if (!/[A-Za-z]/.test(pw) || !/\d/.test(pw)) {
+    throw Object.assign(new Error('A senha deve conter letras e números.'), {
+      code: 'PASSWORD_TOO_WEAK'
+    })
+  }
+}
+
+function assertUsernameValid(username: string): void {
+  if (!USERNAME_REGEX.test(username)) {
+    throw Object.assign(
+      new Error(
+        'Usuário inválido. Use 3–32 caracteres começando com letra; aceita letras, dígitos, ponto, traço e sublinhado.'
+      ),
+      { code: 'USERNAME_INVALID' }
+    )
+  }
+}
+
 interface UserRow {
   id: number
   username: string
@@ -52,16 +81,32 @@ export function createUser(params: {
   fullName: string
   role: UserRole
 }): User {
+  const username = params.username.trim().toLowerCase()
+  const fullName = params.fullName.trim()
+  if (!fullName) {
+    throw Object.assign(new Error('Nome completo é obrigatório.'), { code: 'FULLNAME_REQUIRED' })
+  }
+  assertUsernameValid(username)
+  assertPasswordStrong(params.password)
+
+  const db = getDb()
+  const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(username) as
+    | { id: number }
+    | undefined
+  if (existing) {
+    throw Object.assign(new Error(`Usuário "${username}" já existe.`), {
+      code: 'USERNAME_TAKEN'
+    })
+  }
+
   const hash = bcrypt.hashSync(params.password, 10)
-  const result = getDb()
+  const result = db
     .prepare(
       `INSERT INTO users (username, password_hash, full_name, role, active, must_change_password)
        VALUES (?, ?, ?, ?, 1, 1)`
     )
-    .run(params.username, hash, params.fullName, params.role)
-  const row = getDb()
-    .prepare('SELECT * FROM users WHERE id = ?')
-    .get(result.lastInsertRowid) as UserRow
+    .run(username, hash, fullName, params.role)
+  const row = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid) as UserRow
   logAudit({
     action: 'create',
     entity: 'user',
@@ -83,7 +128,33 @@ export function updateUser(id: number, params: { fullName?: string; role?: UserR
   return toUser(row)
 }
 
-export function setUserActive(id: number, active: boolean): void {
+export function setUserActive(id: number, active: boolean, actorUserId?: number | null): void {
+  if (!active && actorUserId != null && actorUserId === id) {
+    throw Object.assign(new Error('Você não pode desativar sua própria conta.'), {
+      code: 'CANNOT_DEACTIVATE_SELF'
+    })
+  }
+  // Não permitir deixar o sistema sem nenhum admin ativo: se for o último
+  // admin ativo, recusa a desativação / mudança que removeria o papel.
+  if (!active) {
+    const db = getDb()
+    const target = db.prepare('SELECT role, active FROM users WHERE id = ?').get(id) as
+      | { role: UserRole; active: number }
+      | undefined
+    if (target && target.role === 'admin' && target.active === 1) {
+      const others = db
+        .prepare(
+          "SELECT COUNT(*) AS n FROM users WHERE role = 'admin' AND active = 1 AND id != ?"
+        )
+        .get(id) as { n: number }
+      if (others.n === 0) {
+        throw Object.assign(
+          new Error('Não é possível desativar o último administrador ativo do sistema.'),
+          { code: 'LAST_ADMIN' }
+        )
+      }
+    }
+  }
   getDb()
     .prepare('UPDATE users SET active = ? WHERE id = ?')
     .run(active ? 1 : 0, id)
@@ -91,6 +162,7 @@ export function setUserActive(id: number, active: boolean): void {
 }
 
 export function resetPassword(id: number, newPassword: string): void {
+  assertPasswordStrong(newPassword)
   const hash = bcrypt.hashSync(newPassword, 10)
   getDb()
     .prepare('UPDATE users SET password_hash = ?, must_change_password = 1 WHERE id = ?')
@@ -105,6 +177,7 @@ export function changePassword(id: number, oldPassword: string, newPassword: str
   if (!bcrypt.compareSync(oldPassword, row.password_hash)) {
     throw Object.assign(new Error('Senha atual incorreta.'), { code: 'WRONG_PASSWORD' })
   }
+  assertPasswordStrong(newPassword)
   const hash = bcrypt.hashSync(newPassword, 10)
   db.prepare('UPDATE users SET password_hash = ?, must_change_password = 0 WHERE id = ?').run(
     hash,

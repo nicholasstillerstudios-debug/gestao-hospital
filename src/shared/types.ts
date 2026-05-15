@@ -5,6 +5,32 @@
 
 export type UserRole = 'admin' | 'recepcao' | 'enfermagem' | 'medico' | 'farmacia'
 
+export const USER_ROLE_LABELS: Record<UserRole, string> = {
+  admin: 'Administrador(a)',
+  recepcao: 'Recepção',
+  enfermagem: 'Enfermagem',
+  medico: 'Médico(a)',
+  farmacia: 'Farmácia'
+}
+
+/**
+ * Resumo do que cada papel acessa. Exibido como ajuda na tela de criação
+ * de usuário. A regra real vive nos handlers IPC (`requireRole`) e no
+ * Layout sidebar — esta string é só guia visual para quem está cadastrando.
+ */
+export const USER_ROLE_DESCRIPTIONS: Record<UserRole, string> = {
+  admin:
+    'Acesso total: pacientes, internações, prescrições, farmácia, CCIH, centro cirúrgico, BPA, usuários, configurações, auditoria e backup.',
+  recepcao:
+    'Atende a recepção: cadastra pacientes, agenda consultas, faz check-in e abre atendimentos no PS. Não acessa prescrição, farmácia ou administração.',
+  enfermagem:
+    'Equipe de enfermagem: triagem, sinais vitais, evoluções, checagem de medicação (MAR), balanço hídrico, isolamentos e admissão de pacientes em leito.',
+  medico:
+    'Médico(a): prescreve, evolui, autoriza alta, cria cirurgias, registra IRAS e libera atendimentos. Acessa relatórios e BPA.',
+  farmacia:
+    'Farmácia hospitalar: cadastra medicamentos, gerencia lotes, lança entradas/saídas de estoque e dispensa para o paciente.'
+}
+
 export interface User {
   id: number
   username: string
@@ -428,10 +454,13 @@ export interface BackupInfo {
 export type UnitType = 'ubs' | 'hospital' | 'mista'
 
 export const UNIT_TYPE_LABELS: Record<UnitType, string> = {
-  ubs: 'UBS / Atenção primária',
-  hospital: 'Hospital',
-  mista: 'Mista (UBS + hospital)'
+  hospital: 'Hospital (internação + ambulatório)',
+  mista: 'Hospital + UBS (rede municipal mista)',
+  ubs: 'UBS / Atenção primária apenas'
 }
+
+/** Ordem de exibição em selects (hospital primeiro — produto é hospitalar). */
+export const UNIT_TYPE_ORDER: UnitType[] = ['hospital', 'mista', 'ubs']
 
 export interface AppSettings {
   /** 0 = retenção indefinida; >0 = manter logs de auditoria por X dias. */

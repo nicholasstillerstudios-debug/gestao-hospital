@@ -162,8 +162,8 @@ export function registerIpcHandlers(): void {
   })
 
   registerHandler(IPC.users.setActive, (id: unknown, active: unknown) => {
-    requireRole('admin')
-    usersRepo.setUserActive(Number(id), Boolean(active))
+    const actor = requireRole('admin')
+    usersRepo.setUserActive(Number(id), Boolean(active), actor.id)
     return null
   })
 
