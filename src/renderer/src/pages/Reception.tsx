@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { PageHeader } from '@renderer/components/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
 import { Field, Input, Select } from '@renderer/components/ui/Field'
@@ -81,7 +81,7 @@ export function ReceptionPage(): React.JSX.Element {
             <Button variant="outline" onClick={() => navigate('/pacientes/novo')}>
               + Novo paciente
             </Button>
-            <Button variant="outline" onClick={() => navigate('/agenda')}>
+            <Button variant="outline" onClick={() => navigate('/consultas')}>
               Agenda completa
             </Button>
             <Button variant="outline" onClick={() => void load()}>
@@ -145,9 +145,13 @@ export function ReceptionPage(): React.JSX.Element {
                   <span className="font-mono text-xs text-slate-500">
                     {a.scheduledAt.slice(11, 16)}
                   </span>
-                  <span className="text-base font-semibold text-slate-800">
+                  <Link
+                    to={`/pacientes/${a.patient.id}`}
+                    className="text-base font-semibold text-slate-800 hover:text-cyan-700 hover:underline"
+                    title="Abrir prontuário do paciente"
+                  >
                     {a.patient.fullName}
-                  </span>
+                  </Link>
                   <StatusBadge status={a.status} />
                 </div>
                 <div className="mt-0.5 text-xs text-slate-500">
@@ -158,14 +162,23 @@ export function ReceptionPage(): React.JSX.Element {
                   <div className="mt-1 truncate text-sm text-slate-700">Motivo: {a.reason}</div>
                 ) : null}
               </div>
-              <Button
-                onClick={() => void handleCheckIn(a.id)}
-                className="shrink-0 bg-emerald-600 text-white hover:bg-emerald-700"
-                size="md"
-                title="Marca chegada e envia o paciente para a fila de triagem"
-              >
-                Check-in
-              </Button>
+              <div className="flex flex-none gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/pacientes/${a.patient.id}`)}
+                >
+                  Prontuário
+                </Button>
+                <Button
+                  onClick={() => void handleCheckIn(a.id)}
+                  className="bg-emerald-600 text-white hover:bg-emerald-700"
+                  size="md"
+                  title="Marca chegada e envia o paciente para a fila de triagem"
+                >
+                  Check-in
+                </Button>
+              </div>
             </li>
           ))}
         </CardSection>
@@ -186,9 +199,13 @@ export function ReceptionPage(): React.JSX.Element {
             >
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-base font-semibold text-slate-800">
+                  <Link
+                    to={`/pacientes/${a.patient.id}`}
+                    className="text-base font-semibold text-slate-800 hover:text-cyan-700 hover:underline"
+                    title="Abrir prontuário do paciente"
+                  >
                     {a.patient.fullName}
-                  </span>
+                  </Link>
                   <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
                     Sem triagem
                   </span>
@@ -201,9 +218,18 @@ export function ReceptionPage(): React.JSX.Element {
                   <div className="mt-1 truncate text-sm text-slate-700">Motivo: {a.reason}</div>
                 ) : null}
               </div>
-              <Button variant="outline" size="sm" onClick={() => navigate('/triagem')}>
-                Ir para Triagem
-              </Button>
+              <div className="flex flex-none gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/pacientes/${a.patient.id}`)}
+                >
+                  Prontuário
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate('/triagem')}>
+                  Ir para Triagem
+                </Button>
+              </div>
             </li>
           ))}
         </CardSection>
@@ -223,12 +249,25 @@ export function ReceptionPage(): React.JSX.Element {
             >
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-semibold text-slate-800">{a.patient.fullName}</span>
+                  <Link
+                    to={`/pacientes/${a.patient.id}`}
+                    className="text-sm font-semibold text-slate-800 hover:text-cyan-700 hover:underline"
+                    title="Abrir prontuário do paciente"
+                  >
+                    {a.patient.fullName}
+                  </Link>
                   <TriageBadge color={a.triageColor} />
                   <StatusBadge status={a.status} />
                 </div>
                 <div className="text-xs text-slate-500">{a.professional.fullName}</div>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/pacientes/${a.patient.id}`)}
+              >
+                Prontuário
+              </Button>
             </li>
           ))}
         </CardSection>
@@ -243,7 +282,13 @@ export function ReceptionPage(): React.JSX.Element {
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold text-slate-700">{a.patient.fullName}</span>
+                    <Link
+                      to={`/pacientes/${a.patient.id}`}
+                      className="font-semibold text-slate-700 hover:text-cyan-700 hover:underline"
+                      title="Abrir prontuário do paciente"
+                    >
+                      {a.patient.fullName}
+                    </Link>
                     <StatusBadge status={a.status} />
                   </div>
                 </div>

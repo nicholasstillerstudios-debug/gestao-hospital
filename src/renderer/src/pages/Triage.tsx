@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { PageHeader } from '@renderer/components/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
 import { TriageBadge } from '@renderer/components/ui/Badge'
@@ -202,9 +202,13 @@ export function TriagePage(): React.JSX.Element {
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-base font-semibold text-slate-800">
+                          <Link
+                            to={`/pacientes/${a.patient.id}`}
+                            className="text-base font-semibold text-slate-800 hover:text-cyan-700 hover:underline"
+                            title="Abrir prontuário"
+                          >
                             {a.patient.fullName}
-                          </span>
+                          </Link>
                           <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
                             Sem triagem
                           </span>
@@ -265,9 +269,13 @@ export function TriagePage(): React.JSX.Element {
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-base font-semibold text-slate-800">
+                          <Link
+                            to={`/pacientes/${a.patient.id}`}
+                            className="text-base font-semibold text-slate-800 hover:text-cyan-700 hover:underline"
+                            title="Abrir prontuário"
+                          >
                             {a.patient.fullName}
-                          </span>
+                          </Link>
                           <TriageBadge color={a.triageColor} />
                           <span
                             className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 tabular-nums ${STATUS_PILL[wait.status]}`}

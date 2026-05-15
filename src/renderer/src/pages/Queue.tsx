@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { PageHeader } from '@renderer/components/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
 import { StatusBadge, TriageBadge } from '@renderer/components/ui/Badge'
@@ -186,9 +186,13 @@ export function QueuePage(): React.JSX.Element {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-base font-semibold text-slate-800">
+                      <Link
+                        to={`/pacientes/${a.patient.id}`}
+                        className="text-base font-semibold text-slate-800 hover:text-cyan-700 hover:underline"
+                        title="Abrir prontuário"
+                      >
                         {a.patient.fullName}
-                      </span>
+                      </Link>
                       <TriageBadge color={a.triageColor} />
                       <StatusBadge status={a.status} />
                       <span

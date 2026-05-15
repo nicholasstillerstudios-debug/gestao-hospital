@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { PageHeader } from '@renderer/components/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
 import { Field, Input, Select, Textarea } from '@renderer/components/ui/Field'
@@ -145,7 +145,15 @@ export function ConsultasPage(): React.JSX.Element {
                   return (
                     <tr key={a.id} className="hover:bg-slate-50">
                       <td className="px-4 py-2.5 font-mono text-slate-700">{time}</td>
-                      <td className="px-4 py-2.5 text-slate-800">{a.patient.fullName}</td>
+                      <td className="px-4 py-2.5 text-slate-800">
+                        <Link
+                          to={`/pacientes/${a.patient.id}`}
+                          className="hover:text-cyan-700 hover:underline"
+                          title="Abrir prontuário"
+                        >
+                          {a.patient.fullName}
+                        </Link>
+                      </td>
                       <td className="px-4 py-2.5 text-slate-600">
                         {a.professional.fullName}
                         {a.professional.specialty ? (
