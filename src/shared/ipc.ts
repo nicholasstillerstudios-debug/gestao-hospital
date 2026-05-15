@@ -248,6 +248,11 @@ export const IPC = {
   meta: {
     appInfo: 'meta:app-info'
   },
+  client: {
+    getBoot: 'client:get-boot',
+    setBoot: 'client:set-boot',
+    ping: 'client:ping'
+  },
   updater: {
     check: 'updater:check',
     quitAndInstall: 'updater:quit-and-install',

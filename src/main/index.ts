@@ -10,6 +10,8 @@ import { purgeAuditOlderThan } from './audit'
 import { getSettings } from './repositories/settings'
 import { startServer, stopServer } from './server'
 import { purgeExpiredSessions } from './server/sessions'
+import { loadBootConfig } from './client/config'
+import { registerClientHandlers } from './client/proxy'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -51,28 +53,36 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  const db = initDatabase()
-  seedInitialAdmin(db)
-  seedSampleProfessionals(db)
-  registerIpcHandlers()
-  registerUpdater()
+  const boot = loadBootConfig()
 
-  // Purga linhas de auditoria expiradas conforme a política de retenção atual.
-  let settings = getSettings()
-  try {
-    purgeAuditOlderThan(settings.auditRetentionDays)
-  } catch (err) {
-    console.error('[audit] purge inicial falhou:', err)
-  }
+  if (boot.runMode === 'client') {
+    // Cliente: sem DB local. Proxy IPC → HTTP do servidor LAN.
+    registerClientHandlers()
+    console.log(`[client] modo cliente — servidor configurado: ${boot.serverUrl ?? '(none)'}`)
+  } else {
+    // Standalone ou servidor: abre banco local e registra handlers reais.
+    const db = initDatabase()
+    seedInitialAdmin(db)
+    seedSampleProfessionals(db)
+    registerIpcHandlers()
+    registerUpdater()
 
-  // Modo servidor LAN: sobe HTTP API. Standalone/cliente: não sobe.
-  if (settings.runMode === 'server') {
+    const settings = getSettings()
     try {
-      purgeExpiredSessions()
-      const info = await startServer(settings.serverPort)
-      console.log(`[server] API LAN ouvindo em ${info.url}`)
+      purgeAuditOlderThan(settings.auditRetentionDays)
     } catch (err) {
-      console.error('[server] falha ao iniciar HTTP API:', err)
+      console.error('[audit] purge inicial falhou:', err)
+    }
+
+    if (boot.runMode === 'server' || settings.runMode === 'server') {
+      try {
+        purgeExpiredSessions()
+        const port = boot.serverPort ?? settings.serverPort
+        const info = await startServer(port)
+        console.log(`[server] API LAN ouvindo em ${info.url}`)
+      } catch (err) {
+        console.error('[server] falha ao iniciar HTTP API:', err)
+      }
     }
   }
 
@@ -84,7 +94,9 @@ app.whenReady().then(async () => {
 })
 
 app.on('window-all-closed', () => {
-  closeDatabase()
+  if (loadBootConfig().runMode !== 'client') {
+    closeDatabase()
+  }
   if (process.platform !== 'darwin') {
     app.quit()
   }
@@ -97,6 +109,8 @@ app.on('before-quit', async (e) => {
   } catch {
     /* ignore */
   }
-  closeDatabase()
+  if (loadBootConfig().runMode !== 'client') {
+    closeDatabase()
+  }
   app.exit(0)
 })

@@ -107,6 +107,24 @@ export function registerIpcHandlers(): void {
     dbPath: backupRepo.getCurrentDatabasePath()
   }))
 
+  // ---------- Client boot config (modo de execução / URL do servidor) ----------
+  // Disponível em standalone/server também, para a aba Rede da UI poder
+  // ler/gravar o runmode.json (fonte de verdade do boot). Sem auth: é
+  // configuração local da máquina, não dados clínicos.
+  registerHandler(IPC.client.getBoot, async () => {
+    const { loadBootConfig } = await import('./client/config')
+    return loadBootConfig()
+  })
+  registerHandler(IPC.client.setBoot, async (cfg: unknown) => {
+    const { saveBootConfig } = await import('./client/config')
+    saveBootConfig(cfg as { runMode: 'standalone' | 'server' | 'client'; serverUrl?: string; serverPort?: number })
+    return { ok: true }
+  })
+  registerHandler(IPC.client.ping, async (url: unknown) => {
+    const { pingServer } = await import('./client/proxy')
+    return await pingServer(String(url))
+  })
+
   // ---------- Auth ----------
   registerHandler(IPC.auth.login, (username: unknown, password: unknown) => {
     const user = usersRepo.verifyLogin(String(username), String(password))

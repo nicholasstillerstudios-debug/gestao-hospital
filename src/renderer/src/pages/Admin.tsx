@@ -1486,32 +1486,54 @@ function PresetCard({
 }
 
 function NetworkTab(): React.JSX.Element {
-  const [settings, setSettings] = useState<AppSettings | null>(null)
+  const [loaded, setLoaded] = useState(false)
   const [runMode, setRunMode] = useState<RunMode>('standalone')
   const [serverPort, setServerPort] = useState(7321)
+  const [serverUrl, setServerUrl] = useState('')
   const [saving, setSaving] = useState(false)
+  const [testing, setTesting] = useState(false)
+  const [testResult, setTestResult] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
 
   useEffect(() => {
-    void window.api.settings.get().then((s) => {
-      setSettings(s)
-      setRunMode(s.runMode)
-      setServerPort(s.serverPort)
+    void window.api.client.getBoot().then((b) => {
+      setRunMode(b.runMode)
+      setServerPort(b.serverPort ?? 7321)
+      setServerUrl(b.serverUrl ?? '')
+      setLoaded(true)
     })
   }, [])
+
+  const testConnection = async (): Promise<void> => {
+    setTesting(true)
+    setTestResult(null)
+    try {
+      const r = await window.api.client.ping(serverUrl)
+      setTestResult(
+        r.ok
+          ? `OK — servidor versão ${r.version ?? '?'}`
+          : `Falha: ${r.error ?? 'sem resposta'}`
+      )
+    } finally {
+      setTesting(false)
+    }
+  }
 
   const submit = async (): Promise<void> => {
     setSaving(true)
     setError(null)
     setNotice(null)
     try {
-      await window.api.settings.update({ runMode, serverPort })
-      setNotice(
-        runMode === 'server'
-          ? `Modo servidor salvo. Reinicie o app para iniciar a API HTTP na porta ${serverPort}.`
-          : 'Configuração de rede salva. Reinicie o app para aplicar.'
-      )
+      if (runMode === 'client' && !serverUrl.trim()) {
+        throw new Error('Informe a URL do servidor (ex.: http://192.168.1.10:7321).')
+      }
+      await window.api.client.setBoot({
+        runMode,
+        serverPort,
+        serverUrl: serverUrl.trim() || undefined
+      })
+      setNotice('Configuração salva. Feche e abra o app novamente para aplicar.')
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -1519,7 +1541,7 @@ function NetworkTab(): React.JSX.Element {
     }
   }
 
-  if (!settings) return <div className="text-sm text-slate-500">Carregando…</div>
+  if (!loaded) return <div className="text-sm text-slate-500">Carregando…</div>
 
   return (
     <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -1568,8 +1590,34 @@ function NetworkTab(): React.JSX.Element {
           . Use o IP da rede local (ipconfig). Recomenda-se IP fixo no servidor.
         </div>
       ) : runMode === 'client' ? (
-        <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-          O modo cliente ainda será configurado na próxima atualização (Fase 2). Por enquanto, mantenha em Standalone.
+        <div className="space-y-2">
+          <Field
+            label="URL do servidor"
+            required
+            hint="Ex.: http://192.168.1.10:7321 (sem barra final)"
+          >
+            <Input
+              value={serverUrl}
+              onChange={(e) => setServerUrl(e.target.value)}
+              placeholder="http://IP:porta"
+            />
+          </Field>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => void testConnection()} disabled={testing || !serverUrl.trim()}>
+              {testing ? 'Testando…' : 'Testar conexão'}
+            </Button>
+            {testResult ? (
+              <span
+                className={`text-xs ${testResult.startsWith('OK') ? 'text-emerald-700' : 'text-red-700'}`}
+              >
+                {testResult}
+              </span>
+            ) : null}
+          </div>
+          <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+            Ao salvar e reiniciar, este computador deixará de usar o banco local e passará a
+            consumir todos os dados do servidor configurado acima.
+          </div>
         </div>
       ) : null}
       {notice ? (

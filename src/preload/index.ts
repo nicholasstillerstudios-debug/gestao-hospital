@@ -567,6 +567,14 @@ const api = {
     indicators: (options?: { fromDate?: string; toDate?: string }): Promise<IrasIndicators> =>
       invoke(IPC.ccih.indicators, options)
   },
+  client: {
+    getBoot: (): Promise<{ runMode: 'standalone' | 'server' | 'client'; serverUrl?: string; serverPort?: number }> =>
+      invoke(IPC.client.getBoot),
+    setBoot: (cfg: { runMode: 'standalone' | 'server' | 'client'; serverUrl?: string; serverPort?: number }): Promise<{ ok: boolean }> =>
+      invoke(IPC.client.setBoot, cfg),
+    ping: (url: string): Promise<{ ok: boolean; version?: string; error?: string }> =>
+      invoke(IPC.client.ping, url)
+  },
   updater: {
     check: (): Promise<UpdaterStatus> => invoke(IPC.updater.check),
     state: (): Promise<UpdaterStatus> => invoke(IPC.updater.state),
