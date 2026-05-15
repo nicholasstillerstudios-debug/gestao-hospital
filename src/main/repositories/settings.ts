@@ -1,6 +1,6 @@
 import { getDb } from '../db'
 import { logAudit } from '../audit'
-import type { AppSettings, ThemeMode, UnitType } from '@shared/types'
+import type { AppSettings, RunMode, ThemeMode, UnitType } from '@shared/types'
 
 interface Row {
   key: string
@@ -23,7 +23,18 @@ const DEFAULTS: AppSettings = {
   brandingPrefeituraName: '',
   brandingSecretariaName: '',
   themePrimary: DEFAULT_PRIMARY,
-  themeMode: 'light'
+  themeMode: 'light',
+  runMode: 'standalone',
+  serverPort: 7321
+}
+
+function parseRunMode(raw: string | undefined): RunMode {
+  return raw === 'server' || raw === 'client' ? raw : 'standalone'
+}
+
+function parsePort(raw: string | undefined): number {
+  const n = Number(raw)
+  return Number.isFinite(n) && n >= 1024 && n <= 65535 ? Math.floor(n) : DEFAULTS.serverPort
 }
 
 const STRING_KEYS: Array<keyof AppSettings> = [
@@ -73,7 +84,9 @@ export function getSettings(): AppSettings {
     brandingPrefeituraName: readString(map, 'brandingPrefeituraName', ''),
     brandingSecretariaName: readString(map, 'brandingSecretariaName', ''),
     themePrimary: themePrimary && isValidHex(themePrimary) ? themePrimary : DEFAULT_PRIMARY,
-    themeMode: themeMode === 'dark' ? 'dark' : 'light'
+    themeMode: themeMode === 'dark' ? 'dark' : 'light',
+    runMode: parseRunMode(map.get('runMode')),
+    serverPort: parsePort(map.get('serverPort'))
   }
 }
 
@@ -114,6 +127,18 @@ export function updateSettings(input: Partial<AppSettings>): AppSettings {
       const value: UnitType =
         input.unitType === 'ubs' || input.unitType === 'mista' ? input.unitType : 'hospital'
       stmt.run('unitType', value)
+    }
+    if (input.runMode != null) {
+      stmt.run('runMode', parseRunMode(input.runMode))
+    }
+    if (input.serverPort != null) {
+      const p = Math.floor(Number(input.serverPort))
+      if (!Number.isFinite(p) || p < 1024 || p > 65535) {
+        throw Object.assign(new Error('Porta deve ser inteiro entre 1024 e 65535.'), {
+          code: 'INVALID_PORT'
+        })
+      }
+      stmt.run('serverPort', String(p))
     }
   })
   tx()

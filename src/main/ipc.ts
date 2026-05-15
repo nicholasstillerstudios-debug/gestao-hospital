@@ -74,9 +74,14 @@ import type {
 } from '@shared/types'
 import type { AttendanceSaveInput } from './repositories/attendances'
 
-type Handler = (...args: unknown[]) => unknown | Promise<unknown>
+export type Handler = (...args: unknown[]) => unknown | Promise<unknown>
+
+/** Registro central de handlers (channel → função). Reaproveitado pelo
+ *  servidor HTTP (modo LAN) para expor os mesmos canais como rotas REST. */
+export const handlerRegistry = new Map<string, Handler>()
 
 function registerHandler(channel: string, handler: Handler): void {
+  handlerRegistry.set(channel, handler)
   ipcMain.handle(channel, async (_event, ...args) => {
     try {
       const data = await handler(...args)

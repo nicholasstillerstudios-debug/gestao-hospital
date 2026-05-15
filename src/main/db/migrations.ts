@@ -995,6 +995,29 @@ const MIGRATIONS: Migration[] = [
           FROM app_settings WHERE key = 'brandingLogoUbsFile';
       DELETE FROM app_settings WHERE key = 'brandingLogoUbsFile';
     `
+  },
+  {
+    id: 16,
+    name: 'lan_server_drive',
+    sql: `
+      -- Tokens de sessão para autenticação cliente↔servidor via HTTP LAN.
+      -- O servidor emite no /api/auth/login e o cliente envia em Bearer.
+      CREATE TABLE IF NOT EXISTS api_sessions (
+        token TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        expires_at TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        last_used_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_api_sessions_user ON api_sessions(user_id);
+      CREATE INDEX IF NOT EXISTS idx_api_sessions_expires ON api_sessions(expires_at);
+
+      -- Chaves de configuração novas em app_settings (KV existente).
+      INSERT OR IGNORE INTO app_settings (key, value, updated_at)
+        VALUES ('runMode', 'standalone', datetime('now'));
+      INSERT OR IGNORE INTO app_settings (key, value, updated_at)
+        VALUES ('serverPort', '7321', datetime('now'));
+    `
   }
 ]
 

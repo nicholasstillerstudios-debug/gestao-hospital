@@ -8,6 +8,8 @@ import { registerIpcHandlers } from './ipc'
 import { registerUpdater } from './updater'
 import { purgeAuditOlderThan } from './audit'
 import { getSettings } from './repositories/settings'
+import { startServer, stopServer } from './server'
+import { purgeExpiredSessions } from './server/sessions'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -42,7 +44,7 @@ function createWindow(): void {
   }
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   electronApp.setAppUserModelId('br.hospital.gestao')
 
   app.on('browser-window-created', (_, window) => {
@@ -56,11 +58,22 @@ app.whenReady().then(() => {
   registerUpdater()
 
   // Purga linhas de auditoria expiradas conforme a política de retenção atual.
+  let settings = getSettings()
   try {
-    const settings = getSettings()
     purgeAuditOlderThan(settings.auditRetentionDays)
   } catch (err) {
     console.error('[audit] purge inicial falhou:', err)
+  }
+
+  // Modo servidor LAN: sobe HTTP API. Standalone/cliente: não sobe.
+  if (settings.runMode === 'server') {
+    try {
+      purgeExpiredSessions()
+      const info = await startServer(settings.serverPort)
+      console.log(`[server] API LAN ouvindo em ${info.url}`)
+    } catch (err) {
+      console.error('[server] falha ao iniciar HTTP API:', err)
+    }
   }
 
   createWindow()
@@ -77,6 +90,13 @@ app.on('window-all-closed', () => {
   }
 })
 
-app.on('before-quit', () => {
+app.on('before-quit', async (e) => {
+  e.preventDefault()
+  try {
+    await stopServer()
+  } catch {
+    /* ignore */
+  }
   closeDatabase()
+  app.exit(0)
 })

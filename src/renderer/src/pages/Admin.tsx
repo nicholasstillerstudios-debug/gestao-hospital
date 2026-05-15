@@ -18,7 +18,13 @@ import type {
   User,
   UserRole
 } from '@shared/types'
-import { UNIT_TYPE_LABELS, UNIT_TYPE_ORDER, USER_ROLE_DESCRIPTIONS } from '@shared/types'
+import {
+  RUN_MODE_LABELS,
+  UNIT_TYPE_LABELS,
+  UNIT_TYPE_ORDER,
+  USER_ROLE_DESCRIPTIONS
+} from '@shared/types'
+import type { RunMode } from '@shared/types'
 import { useTheme, THEME_PRESETS, type ThemePreset } from '@renderer/stores/theme'
 import { useUnit } from '@renderer/stores/unit'
 import {
@@ -41,6 +47,7 @@ export function AdminPage(): React.JSX.Element {
     { to: '/admin/aparencia', label: 'Aparência', exact: false },
     { to: '/admin/auditoria', label: 'Auditoria', exact: false },
     { to: '/admin/backup', label: 'Backup', exact: false },
+    { to: '/admin/rede', label: 'Rede', exact: false },
     { to: '/admin/sistema', label: 'Sistema', exact: false }
   ]
   return (
@@ -114,6 +121,14 @@ export function AdminPage(): React.JSX.Element {
             element={
               <TabPanel>
                 <BackupTab />
+              </TabPanel>
+            }
+          />
+          <Route
+            path="rede"
+            element={
+              <TabPanel>
+                <NetworkTab />
               </TabPanel>
             }
           />
@@ -1467,6 +1482,112 @@ function PresetCard({
       </div>
       <div className="text-xs text-slate-500">{preset.description}</div>
     </button>
+  )
+}
+
+function NetworkTab(): React.JSX.Element {
+  const [settings, setSettings] = useState<AppSettings | null>(null)
+  const [runMode, setRunMode] = useState<RunMode>('standalone')
+  const [serverPort, setServerPort] = useState(7321)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+
+  useEffect(() => {
+    void window.api.settings.get().then((s) => {
+      setSettings(s)
+      setRunMode(s.runMode)
+      setServerPort(s.serverPort)
+    })
+  }, [])
+
+  const submit = async (): Promise<void> => {
+    setSaving(true)
+    setError(null)
+    setNotice(null)
+    try {
+      await window.api.settings.update({ runMode, serverPort })
+      setNotice(
+        runMode === 'server'
+          ? `Modo servidor salvo. Reinicie o app para iniciar a API HTTP na porta ${serverPort}.`
+          : 'Configuração de rede salva. Reinicie o app para aplicar.'
+      )
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!settings) return <div className="text-sm text-slate-500">Carregando…</div>
+
+  return (
+    <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <div>
+        <h2 className="text-base font-semibold text-slate-800">Compartilhamento na rede (LAN)</h2>
+        <p className="mt-1 max-w-2xl text-sm text-slate-600">
+          Defina como este computador se comporta. Em <strong>Servidor</strong>, ele expõe os dados
+          para outras estações da mesma rede (recepção, enfermagem etc.). Em{' '}
+          <strong>Cliente</strong>, ele se conecta a um servidor existente. <strong>Standalone</strong>{' '}
+          é o modo padrão (banco local, sem rede).
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Field label="Modo de execução" required>
+          <Select value={runMode} onChange={(e) => setRunMode(e.target.value as RunMode)}>
+            {(Object.keys(RUN_MODE_LABELS) as RunMode[]).map((m) => (
+              <option key={m} value={m}>
+                {RUN_MODE_LABELS[m]}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        {runMode === 'server' ? (
+          <Field
+            label="Porta TCP"
+            required
+            hint="Padrão 7321. Use entre 1024 e 65535. Libere essa porta no firewall do Windows."
+          >
+            <Input
+              type="number"
+              min={1024}
+              max={65535}
+              value={serverPort}
+              onChange={(e) => setServerPort(Number(e.target.value) || 7321)}
+            />
+          </Field>
+        ) : null}
+      </div>
+      {runMode === 'server' ? (
+        <div className="rounded-md border border-cyan-200 bg-cyan-50 p-3 text-xs text-cyan-900">
+          <strong>Como os clientes conectam:</strong> peça aos outros computadores para abrir o app
+          em modo <em>Cliente</em> e informar a URL{' '}
+          <code className="rounded bg-cyan-100 px-1 py-0.5">
+            http://[IP-deste-servidor]:{serverPort}
+          </code>
+          . Use o IP da rede local (ipconfig). Recomenda-se IP fixo no servidor.
+        </div>
+      ) : runMode === 'client' ? (
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+          O modo cliente ainda será configurado na próxima atualização (Fase 2). Por enquanto, mantenha em Standalone.
+        </div>
+      ) : null}
+      {notice ? (
+        <div className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700 ring-1 ring-emerald-200">
+          {notice}
+        </div>
+      ) : null}
+      {error ? (
+        <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200">
+          {error}
+        </div>
+      ) : null}
+      <div className="flex justify-end">
+        <Button onClick={() => void submit()} disabled={saving}>
+          {saving ? 'Salvando…' : 'Salvar'}
+        </Button>
+      </div>
+    </div>
   )
 }
 

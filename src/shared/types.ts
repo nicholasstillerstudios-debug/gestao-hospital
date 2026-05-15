@@ -483,6 +483,21 @@ export interface AppSettings {
   /** Apar\u00eancia do app: cor prim\u00e1ria (hex) e modo claro/escuro. */
   themePrimary: string
   themeMode: ThemeMode
+  /** Modo de execução do app:
+   *   - standalone: SQLite local, sem rede (default)
+   *   - server: expõe API HTTP na LAN para clientes se conectarem
+   *   - client: consome API de um servidor remoto (não usa banco local) */
+  runMode: RunMode
+  /** Porta TCP em que o servidor escuta (apenas runMode=server). */
+  serverPort: number
+}
+
+export type RunMode = 'standalone' | 'server' | 'client'
+
+export const RUN_MODE_LABELS: Record<RunMode, string> = {
+  standalone: 'Standalone (SQLite local)',
+  server: 'Servidor (compartilha na LAN)',
+  client: 'Cliente (conecta em servidor)'
 }
 
 export type ThemeMode = 'light' | 'dark'
