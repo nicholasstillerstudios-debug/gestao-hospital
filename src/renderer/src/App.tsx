@@ -33,6 +33,7 @@ import { ExamesPage } from './pages/Exames'
 import {
   PrintAttendancePage,
   PrintAttestationPage,
+  PrintModelPage,
   PrintPrescriptionPage,
   PrintRequisitionPage
 } from './pages/Print'
@@ -110,6 +111,14 @@ function App(): React.JSX.Element {
         element={
           <ProtectedRoute>
             <PrintRequisitionPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/imprimir/modelo"
+        element={
+          <ProtectedRoute roles={['admin']}>
+            <PrintModelPage />
           </ProtectedRoute>
         }
       />

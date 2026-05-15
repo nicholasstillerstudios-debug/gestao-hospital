@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import { NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { PageHeader } from '@renderer/components/PageHeader'
 import { ErrorBoundary } from '@renderer/components/ErrorBoundary'
 import { Button } from '@renderer/components/ui/Button'
@@ -45,6 +45,7 @@ export function AdminPage(): React.JSX.Element {
     { to: '/admin/profissionais', label: 'Profissionais', exact: false },
     { to: '/admin/unidade', label: 'Unidade', exact: false },
     { to: '/admin/aparencia', label: 'Aparência', exact: false },
+    { to: '/admin/timbrado', label: 'Timbrado', exact: false },
     { to: '/admin/auditoria', label: 'Auditoria', exact: false },
     { to: '/admin/backup', label: 'Backup', exact: false },
     { to: '/admin/rede', label: 'Rede', exact: false },
@@ -105,6 +106,14 @@ export function AdminPage(): React.JSX.Element {
             element={
               <TabPanel>
                 <AppearanceTab />
+              </TabPanel>
+            }
+          />
+          <Route
+            path="timbrado"
+            element={
+              <TabPanel>
+                <LetterheadTab />
               </TabPanel>
             }
           />
@@ -1662,6 +1671,254 @@ function PresetCard({
       </div>
       <div className="text-xs text-slate-500">{preset.description}</div>
     </button>
+  )
+}
+
+function LetterheadTab(): React.JSX.Element {
+  const navigate = useNavigate()
+  const [logos, setLogos] = useState<BrandingLogos>({
+    prefeitura: null,
+    secretaria: null,
+    hospital: null
+  })
+  const [unit, setUnit] = useState({
+    unitName: '',
+    unitCnes: '',
+    unitAddress: '',
+    unitPhone: '',
+    unitMunicipality: '',
+    brandingPrefeituraName: '',
+    brandingSecretariaName: ''
+  })
+  const [logoHeight, setLogoHeight] = useState(56)
+  const [align, setAlign] = useState<'left' | 'center'>('center')
+  const [showFooter, setShowFooter] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const reload = async (): Promise<void> => {
+    const [s, l] = await Promise.all([
+      window.api.settings.get(),
+      window.api.branding.getLogos()
+    ])
+    setLogos(l)
+    setUnit({
+      unitName: s.unitName,
+      unitCnes: s.unitCnes,
+      unitAddress: s.unitAddress,
+      unitPhone: s.unitPhone,
+      unitMunicipality: s.unitMunicipality,
+      brandingPrefeituraName: s.brandingPrefeituraName,
+      brandingSecretariaName: s.brandingSecretariaName
+    })
+    setLogoHeight(s.letterheadLogoHeight)
+    setAlign(s.letterheadAlign)
+    setShowFooter(s.letterheadShowFooter)
+  }
+
+  useEffect(() => {
+    void reload()
+  }, [])
+
+  const save = async (): Promise<void> => {
+    setSaving(true)
+    setError(null)
+    setNotice(null)
+    try {
+      await window.api.settings.update({
+        letterheadLogoHeight: logoHeight,
+        letterheadAlign: align,
+        letterheadShowFooter: showFooter
+      })
+      setNotice('Layout do timbrado salvo. Já vale para os próximos documentos impressos.')
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const hasAnyLogo = logos.prefeitura || logos.secretaria || logos.hospital
+  const prefeituraText = unit.brandingPrefeituraName || 'PREFEITURA MUNICIPAL'
+  const secretariaText = unit.brandingSecretariaName || 'SECRETARIA MUNICIPAL DE SAÚDE'
+  const unidadeText = unit.unitName || 'NOME DO HOSPITAL'
+  const logoStyle = { height: `${logoHeight}px`, width: 'auto' as const }
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="text-sm font-semibold text-slate-700">Editor de papel timbrado</h2>
+        <p className="mt-1 max-w-2xl text-xs text-slate-600">
+          Ajuste o tamanho e o alinhamento dos logos e textos que aparecem no cabeçalho de fichas,
+          atestados, receituários e requisições. Faça upload dos logos em <em>Admin → Aparência</em>{' '}
+          e os dados da unidade em <em>Admin → Unidade</em>.
+        </p>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="space-y-3">
+            <Field label={`Altura dos logos: ${logoHeight}px`} hint="24 a 120 pixels">
+              <input
+                type="range"
+                min={24}
+                max={120}
+                step={2}
+                value={logoHeight}
+                onChange={(e) => setLogoHeight(Number(e.target.value))}
+                className="w-full"
+              />
+            </Field>
+            <Field label="Alinhamento">
+              <Select
+                value={align}
+                onChange={(e) => setAlign(e.target.value === 'left' ? 'left' : 'center')}
+              >
+                <option value="center">Centralizado</option>
+                <option value="left">Alinhado à esquerda</option>
+              </Select>
+            </Field>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={showFooter}
+                onChange={(e) => setShowFooter(e.target.checked)}
+              />
+              Mostrar rodapé (CNES · endereço · telefone · município)
+            </label>
+            <div className="flex flex-wrap gap-2 pt-2">
+              <Button onClick={() => void save()} disabled={saving}>
+                {saving ? 'Salvando…' : 'Salvar layout'}
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/imprimir/modelo')}>
+                Visualizar e exportar PDF
+              </Button>
+            </div>
+            {notice ? (
+              <div className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700 ring-1 ring-emerald-200">
+                {notice}
+              </div>
+            ) : null}
+            {error ? (
+              <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200">
+                {error}
+              </div>
+            ) : null}
+          </div>
+
+          <div>
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Pré-visualização ao vivo
+            </div>
+            <div className="rounded-md border border-dashed border-slate-300 bg-white p-4">
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 6,
+                  textAlign: align,
+                  alignItems: align === 'center' ? 'center' : 'flex-start'
+                }}
+              >
+                {hasAnyLogo ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 24,
+                      justifyContent: align === 'center' ? 'space-around' : 'flex-start',
+                      width: '100%'
+                    }}
+                  >
+                    <div>
+                      {logos.prefeitura ? (
+                        <img src={logos.prefeitura} alt="Prefeitura" style={logoStyle} />
+                      ) : (
+                        <PlaceholderLogo h={logoHeight} label="Prefeitura" />
+                      )}
+                    </div>
+                    <div>
+                      {logos.secretaria ? (
+                        <img src={logos.secretaria} alt="Secretaria" style={logoStyle} />
+                      ) : (
+                        <PlaceholderLogo h={logoHeight} label="Secretaria" />
+                      )}
+                    </div>
+                    <div>
+                      {logos.hospital ? (
+                        <img src={logos.hospital} alt="Hospital" style={logoStyle} />
+                      ) : (
+                        <PlaceholderLogo h={logoHeight} label="Hospital" />
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-slate-400">
+                    Nenhum logo cadastrado em Aparência ainda.
+                  </div>
+                )}
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    color: '#0f172a',
+                    marginTop: 4
+                  }}
+                >
+                  {prefeituraText}
+                </div>
+                <div style={{ fontSize: 12, color: '#334155' }}>{secretariaText}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{unidadeText}</div>
+                {showFooter ? (
+                  <div style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
+                    {unit.unitCnes ? `CNES ${unit.unitCnes}` : 'CNES —'}
+                    {unit.unitAddress ? ` · ${unit.unitAddress}` : ''}
+                    {unit.unitPhone ? ` · Tel. ${unit.unitPhone}` : ''}
+                    {unit.unitMunicipality ? ` · ${unit.unitMunicipality}` : ''}
+                  </div>
+                ) : null}
+                <hr style={{ width: '100%', margin: '8px 0', border: '1px solid #e2e8f0' }} />
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    color: '#0e7490'
+                  }}
+                >
+                  Ficha de atendimento
+                </div>
+                <div className="text-xs text-slate-400">— conteúdo do documento —</div>
+              </div>
+            </div>
+            <p className="mt-2 text-[11px] text-slate-500">
+              Esta é uma simulação. Use <strong>Visualizar e exportar PDF</strong> para abrir o
+              modelo real em página A4 e salvar como PDF.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PlaceholderLogo({ h, label }: { h: number; label: string }): React.JSX.Element {
+  return (
+    <div
+      style={{
+        height: h,
+        width: h * 1.2,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: '1px dashed #cbd5e1',
+        borderRadius: 4,
+        fontSize: 10,
+        color: '#94a3b8',
+        background: '#f8fafc'
+      }}
+    >
+      {label}
+    </div>
   )
 }
 

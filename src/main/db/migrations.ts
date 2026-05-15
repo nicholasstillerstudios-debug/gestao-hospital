@@ -1038,6 +1038,19 @@ const MIGRATIONS: Migration[] = [
       INSERT OR IGNORE INTO app_settings (key, value, updated_at)
         VALUES ('driveAutoEnabled', '0', datetime('now'));
     `
+  },
+  {
+    id: 18,
+    name: 'letterhead_layout',
+    sql: `
+      -- Layout do timbrado nos documentos impressos.
+      INSERT OR IGNORE INTO app_settings (key, value, updated_at)
+        VALUES ('letterheadLogoHeight', '56', datetime('now'));
+      INSERT OR IGNORE INTO app_settings (key, value, updated_at)
+        VALUES ('letterheadAlign', 'center', datetime('now'));
+      INSERT OR IGNORE INTO app_settings (key, value, updated_at)
+        VALUES ('letterheadShowFooter', '1', datetime('now'));
+    `
   }
 ]
 

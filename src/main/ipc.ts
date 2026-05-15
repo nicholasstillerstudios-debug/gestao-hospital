@@ -375,7 +375,10 @@ export function registerIpcHandlers(): void {
       brandingSecretariaName: s.brandingSecretariaName,
       themePrimary: s.themePrimary,
       themeMode: s.themeMode,
-      unitType: s.unitType
+      unitType: s.unitType,
+      letterheadLogoHeight: s.letterheadLogoHeight,
+      letterheadAlign: s.letterheadAlign,
+      letterheadShowFooter: s.letterheadShowFooter
     }
   })
 

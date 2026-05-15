@@ -31,7 +31,17 @@ const DEFAULTS: AppSettings = {
   driveRefreshToken: '',
   driveFolderId: '',
   driveLastBackupAt: '',
-  driveAutoEnabled: false
+  driveAutoEnabled: false,
+  letterheadLogoHeight: 56,
+  letterheadAlign: 'center',
+  letterheadShowFooter: true
+}
+
+function parseLogoHeight(raw: string | undefined): number {
+  const n = Number(raw)
+  return Number.isFinite(n) && n >= 24 && n <= 120
+    ? Math.floor(n)
+    : DEFAULTS.letterheadLogoHeight
 }
 
 function parseRunMode(raw: string | undefined): RunMode {
@@ -103,7 +113,10 @@ export function getSettings(): AppSettings {
     driveRefreshToken: readString(map, 'driveRefreshToken', ''),
     driveFolderId: readString(map, 'driveFolderId', ''),
     driveLastBackupAt: readString(map, 'driveLastBackupAt', ''),
-    driveAutoEnabled: map.get('driveAutoEnabled') === '1'
+    driveAutoEnabled: map.get('driveAutoEnabled') === '1',
+    letterheadLogoHeight: parseLogoHeight(map.get('letterheadLogoHeight')),
+    letterheadAlign: map.get('letterheadAlign') === 'left' ? 'left' : 'center',
+    letterheadShowFooter: map.get('letterheadShowFooter') !== '0'
   }
 }
 
@@ -159,6 +172,21 @@ export function updateSettings(input: Partial<AppSettings>): AppSettings {
     }
     if (input.driveAutoEnabled != null) {
       stmt.run('driveAutoEnabled', input.driveAutoEnabled ? '1' : '0')
+    }
+    if (input.letterheadLogoHeight != null) {
+      const h = Math.floor(Number(input.letterheadLogoHeight))
+      if (!Number.isFinite(h) || h < 24 || h > 120) {
+        throw Object.assign(new Error('Altura do logo deve ficar entre 24 e 120 px.'), {
+          code: 'INVALID_LOGO_HEIGHT'
+        })
+      }
+      stmt.run('letterheadLogoHeight', String(h))
+    }
+    if (input.letterheadAlign != null) {
+      stmt.run('letterheadAlign', input.letterheadAlign === 'left' ? 'left' : 'center')
+    }
+    if (input.letterheadShowFooter != null) {
+      stmt.run('letterheadShowFooter', input.letterheadShowFooter ? '1' : '0')
     }
   })
   tx()

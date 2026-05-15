@@ -501,6 +501,12 @@ export interface AppSettings {
   driveLastBackupAt: string
   /** Backup diário automático ligado. */
   driveAutoEnabled: boolean
+  /** Altura dos logos no cabeçalho impresso, em px (24–120). */
+  letterheadLogoHeight: number
+  /** Alinhamento horizontal do conteúdo do timbrado. */
+  letterheadAlign: 'left' | 'center'
+  /** Exibir a linha CNES/endereço/telefone abaixo dos títulos. */
+  letterheadShowFooter: boolean
 }
 
 export type RunMode = 'standalone' | 'server' | 'client'

@@ -108,6 +108,9 @@ interface PublicUnitSettings {
   themePrimary: string
   themeMode: ThemeMode
   unitType: 'ubs' | 'hospital' | 'mista'
+  letterheadLogoHeight: number
+  letterheadAlign: 'left' | 'center'
+  letterheadShowFooter: boolean
 }
 
 interface UploadLogoInput {

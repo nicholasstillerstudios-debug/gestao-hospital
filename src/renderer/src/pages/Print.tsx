@@ -10,7 +10,7 @@ import type {
 } from '@shared/types'
 import { REQUISITION_TYPE_LABELS } from '@shared/types'
 
-interface UnitInfo {
+export interface UnitInfo {
   unitName: string
   unitCnes: string
   unitAddress: string
@@ -20,7 +20,19 @@ interface UnitInfo {
   brandingSecretariaName: string
 }
 
-interface BrandingLogosState {
+export interface LetterheadLayout {
+  logoHeight: number
+  align: 'left' | 'center'
+  showFooter: boolean
+}
+
+const DEFAULT_LAYOUT: LetterheadLayout = {
+  logoHeight: 56,
+  align: 'center',
+  showFooter: true
+}
+
+export interface BrandingLogosState {
   prefeitura: string | null
   secretaria: string | null
   hospital: string | null
@@ -43,9 +55,14 @@ interface PrintData {
   attendance: Attendance | null
 }
 
-function useUnitInfo(): { unit: UnitInfo; logos: BrandingLogosState } {
+export function useUnitInfo(): {
+  unit: UnitInfo
+  logos: BrandingLogosState
+  layout: LetterheadLayout
+} {
   const [unit, setUnit] = useState<UnitInfo>(EMPTY_UNIT)
   const [logos, setLogos] = useState<BrandingLogosState>(EMPTY_LOGOS)
+  const [layout, setLayout] = useState<LetterheadLayout>(DEFAULT_LAYOUT)
   useEffect(() => {
     let cancelled = false
     void (async () => {
@@ -65,6 +82,11 @@ function useUnitInfo(): { unit: UnitInfo; logos: BrandingLogosState } {
           brandingSecretariaName: u.brandingSecretariaName
         })
         setLogos(l)
+        setLayout({
+          logoHeight: u.letterheadLogoHeight,
+          align: u.letterheadAlign,
+          showFooter: u.letterheadShowFooter
+        })
       } catch {
         // mantém defaults — header cai para o fallback genérico
       }
@@ -73,7 +95,7 @@ function useUnitInfo(): { unit: UnitInfo; logos: BrandingLogosState } {
       cancelled = true
     }
   }, [])
-  return { unit, logos }
+  return { unit, logos, layout }
 }
 
 async function saveAsPdf(suggestedName: string): Promise<void> {
@@ -549,34 +571,52 @@ function PrintToolbar(props: {
   )
 }
 
-function PrintHeader({
+export function PrintHeader({
   title,
   unit,
-  logos
+  logos,
+  layout = DEFAULT_LAYOUT
 }: {
   title: string
   unit: UnitInfo
   logos: BrandingLogosState
+  layout?: LetterheadLayout
 }): React.JSX.Element {
   const hasUnit = unit.unitName.trim().length > 0
   const hasAnyLogo = logos.prefeitura || logos.secretaria || logos.hospital
   const prefeituraText = unit.brandingPrefeituraName || 'PREFEITURA MUNICIPAL'
   const secretariaText = unit.brandingSecretariaName || 'SECRETARIA MUNICIPAL DE SAÚDE'
   const unidadeText = hasUnit ? unit.unitName : 'UNIDADE BÁSICA DE SAÚDE'
+  const logoStyle = { height: `${layout.logoHeight}px`, width: 'auto' } as const
+  const alignStyle: React.CSSProperties = {
+    textAlign: layout.align,
+    alignItems: layout.align === 'center' ? 'center' : 'flex-start'
+  }
+  const logosJustify =
+    layout.align === 'center' ? 'space-around' : ('flex-start' as const)
 
   return (
     <header className="print-header">
       {hasAnyLogo ? (
-        <div className="print-letterhead">
-          <div className="print-letterhead-logos">
+        <div className="print-letterhead" style={alignStyle}>
+          <div
+            className="print-letterhead-logos"
+            style={{ justifyContent: logosJustify, gap: '24px' }}
+          >
             <div className="print-letterhead-logo">
-              {logos.prefeitura ? <img src={logos.prefeitura} alt="Logo Prefeitura" /> : null}
+              {logos.prefeitura ? (
+                <img src={logos.prefeitura} alt="Logo Prefeitura" style={logoStyle} />
+              ) : null}
             </div>
             <div className="print-letterhead-logo">
-              {logos.secretaria ? <img src={logos.secretaria} alt="Logo Secretaria" /> : null}
+              {logos.secretaria ? (
+                <img src={logos.secretaria} alt="Logo Secretaria" style={logoStyle} />
+              ) : null}
             </div>
             <div className="print-letterhead-logo">
-              {logos.hospital ? <img src={logos.hospital} alt="Logo do Hospital" /> : null}
+              {logos.hospital ? (
+                <img src={logos.hospital} alt="Logo do Hospital" style={logoStyle} />
+              ) : null}
             </div>
           </div>
           <div className="print-letterhead-text">
@@ -584,28 +624,32 @@ function PrintHeader({
             <div className="line-2">{secretariaText}</div>
             <div className="line-3">{unidadeText}</div>
           </div>
-          <div className="muted print-letterhead-address">
-            {unit.unitCnes ? <>CNES {unit.unitCnes}</> : null}
-            {unit.unitCnes && unit.unitAddress ? ' · ' : null}
-            {unit.unitAddress || null}
-            {unit.unitPhone ? <> · Tel. {unit.unitPhone}</> : null}
-            {unit.unitMunicipality ? <> · {unit.unitMunicipality}</> : null}
-          </div>
+          {layout.showFooter ? (
+            <div className="muted print-letterhead-address">
+              {unit.unitCnes ? <>CNES {unit.unitCnes}</> : null}
+              {unit.unitCnes && unit.unitAddress ? ' · ' : null}
+              {unit.unitAddress || null}
+              {unit.unitPhone ? <> · Tel. {unit.unitPhone}</> : null}
+              {unit.unitMunicipality ? <> · {unit.unitMunicipality}</> : null}
+            </div>
+          ) : null}
         </div>
       ) : (
-        <div>
+        <div style={{ textAlign: layout.align }}>
           <strong>{hasUnit ? unit.unitName : 'SECRETARIA MUNICIPAL DE SAÚDE'}</strong>
-          <div className="muted">
-            {hasUnit ? (
-              <>
-                {unit.unitCnes ? <>CNES {unit.unitCnes} · </> : null}
-                {unit.unitAddress || 'Unidade Básica de Saúde (UBS)'}
-                {unit.unitPhone ? <> · Tel. {unit.unitPhone}</> : null}
-              </>
-            ) : (
-              'Unidade Básica de Saúde (UBS)'
-            )}
-          </div>
+          {layout.showFooter ? (
+            <div className="muted">
+              {hasUnit ? (
+                <>
+                  {unit.unitCnes ? <>CNES {unit.unitCnes} · </> : null}
+                  {unit.unitAddress || 'Unidade Básica de Saúde (UBS)'}
+                  {unit.unitPhone ? <> · Tel. {unit.unitPhone}</> : null}
+                </>
+              ) : (
+                'Unidade Básica de Saúde (UBS)'
+              )}
+            </div>
+          ) : null}
         </div>
       )}
       <h1>{title}</h1>
@@ -663,5 +707,63 @@ function PrintSignature({
       <div>{professional}</div>
       {subtitle ? <div className="muted">{subtitle}</div> : null}
     </footer>
+  )
+}
+
+/**
+ * Modelo do papel timbrado — usado pela aba Timbrado para exportar PDF
+ * de exemplo (sem dados reais). Mesma estética dos outros prints.
+ */
+export function PrintModelPage(): React.JSX.Element {
+  const navigate = useNavigate()
+  const { unit, logos, layout } = useUnitInfo()
+  const [params] = useSearchParams()
+  const autoPrint = params.get('autoprint') === '1'
+
+  useEffect(() => {
+    if (autoPrint) {
+      const t = setTimeout(() => void saveAsPdf('modelo-timbrado'), 350)
+      return () => clearTimeout(t)
+    }
+    return
+  }, [autoPrint])
+
+  return (
+    <div className="print-document">
+      <PrintToolbar
+        onPrint={() => window.print()}
+        onSavePdf={() => void saveAsPdf('modelo-timbrado')}
+        onClose={() => navigate(-1)}
+      />
+      <PrintHeader
+        title="MODELO DE PAPEL TIMBRADO"
+        unit={unit}
+        logos={logos}
+        layout={layout}
+      />
+      <section>
+        <h2 className="muted" style={{ textTransform: 'uppercase', fontSize: 12, marginTop: 16 }}>
+          Conteúdo do documento
+        </h2>
+        <p>
+          Este é um modelo de pré-visualização do papel timbrado configurado em{' '}
+          <em>Admin → Timbrado</em>. Use o botão acima para exportar como PDF e verificar como
+          ficará a impressão real das fichas, atestados, receituários e requisições.
+        </p>
+        <p className="muted" style={{ fontSize: 12 }}>
+          Ajuste a altura dos logos, alinhamento e visibilidade do rodapé para que o cabeçalho
+          fique como esperado em qualquer documento gerado pelo sistema.
+        </p>
+        <Grid>
+          <Cell label="Paciente">Nome do paciente</Cell>
+          <Cell label="Data de nascimento">dd/mm/aaaa</Cell>
+          <Cell label="CPF">000.000.000-00</Cell>
+          <Cell label="Profissional">Nome do profissional</Cell>
+        </Grid>
+        <SoapBlock label="Subjetivo" value="Aqui aparece o relato do paciente." />
+        <SoapBlock label="Plano" value="Conduta, exames solicitados, retorno." />
+      </section>
+      <PrintSignature professional="________________________________________" subtitle="CRM/COREN" />
+    </div>
   )
 }
