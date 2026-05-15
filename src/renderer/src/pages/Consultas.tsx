@@ -355,26 +355,29 @@ function AppointmentModal({
               setPatientId(null)
             }}
           />
-          {patientQuery.length >= 2 && results.length > 0 && !patientId ? (
-            <ul className="mt-1 max-h-40 overflow-y-auto rounded-md border border-slate-200 bg-white text-sm shadow">
-              {results.map((p) => (
-                <li
-                  key={p.id}
-                  className="cursor-pointer px-3 py-1.5 hover:bg-slate-50"
-                  onClick={() => {
-                    setPatientId(p.id)
-                    setPatientName(p.fullName)
-                    setPatientQuery(p.fullName)
-                    setResults([])
-                  }}
-                >
-                  <span className="font-medium">{p.fullName}</span>
-                  {p.cpf ? <span className="ml-2 text-xs text-slate-500">CPF {p.cpf}</span> : null}
-                </li>
-              ))}
-            </ul>
-          ) : null}
         </Field>
+        {/* Lista FORA do <Field> — <Field> usa <label>, e cliques em <li>
+            dentro de <label> são redirecionados para o input (HTML spec). */}
+        {patientQuery.length >= 2 && results.length > 0 && !patientId ? (
+          <div className="-mt-2 max-h-40 overflow-y-auto rounded-md border border-slate-200 bg-white text-sm shadow">
+            {results.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                className="block w-full cursor-pointer px-3 py-1.5 text-left hover:bg-slate-50"
+                onClick={() => {
+                  setPatientId(p.id)
+                  setPatientName(p.fullName)
+                  setPatientQuery(p.fullName)
+                  setResults([])
+                }}
+              >
+                <span className="font-medium">{p.fullName}</span>
+                {p.cpf ? <span className="ml-2 text-xs text-slate-500">CPF {p.cpf}</span> : null}
+              </button>
+            ))}
+          </div>
+        ) : null}
         <div className="grid grid-cols-2 gap-3">
           <Field label="Data" required>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />

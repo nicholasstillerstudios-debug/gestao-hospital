@@ -493,40 +493,47 @@ function WalkInModal({
                 onChange={(e) => setQuery(e.target.value)}
                 autoFocus
               />
-              {results.length > 0 ? (
-                <ul className="mt-1 max-h-48 overflow-auto rounded-md border border-slate-200 bg-white text-sm shadow-sm">
-                  {results.map((p) => (
-                    <li
-                      key={p.id}
-                      className="cursor-pointer border-b border-slate-100 px-3 py-2 last:border-0 hover:bg-cyan-50"
-                      onClick={() => {
-                        setPatientId(p.id)
-                        setPatientName(p.fullName)
-                        setResults([])
-                      }}
-                    >
-                      <div className="font-medium text-slate-800">{p.fullName}</div>
-                      <div className="text-xs text-slate-500">
-                        {p.cpf ? `CPF ${p.cpf}` : p.cns ? `CNS ${p.cns}` : 'sem documento'}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : query.length >= 2 ? (
-                <div className="mt-1 rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-3 text-xs text-slate-600">
-                  Nenhum paciente encontrado.{' '}
-                  <button
-                    type="button"
-                    className="font-medium text-cyan-700 underline"
-                    onClick={() => navigate('/pacientes/novo')}
-                  >
-                    Cadastrar novo paciente
-                  </button>
-                </div>
-              ) : null}
             </>
           )}
         </Field>
+        {/* IMPORTANTE: a lista de resultados precisa ficar FORA do <Field>
+            porque <Field> renderiza um <label>, e o HTML redireciona
+            cliques em conteúdo não-interativo dentro de <label> para o
+            input associado — o que fazia o clique no <li> "não funcionar".
+            Trocamos também <li> por <button type="button"> por uniformidade
+            com BPA/CCIH/EmergencyRoom e para evitar regressões futuras. */}
+        {!patientId && results.length > 0 ? (
+          <div className="-mt-2 max-h-48 overflow-auto rounded-md border border-slate-200 bg-white text-sm shadow-sm">
+            {results.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                className="block w-full cursor-pointer border-b border-slate-100 px-3 py-2 text-left last:border-0 hover:bg-cyan-50"
+                onClick={() => {
+                  setPatientId(p.id)
+                  setPatientName(p.fullName)
+                  setResults([])
+                }}
+              >
+                <div className="font-medium text-slate-800">{p.fullName}</div>
+                <div className="text-xs text-slate-500">
+                  {p.cpf ? `CPF ${p.cpf}` : p.cns ? `CNS ${p.cns}` : 'sem documento'}
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : !patientId && query.length >= 2 ? (
+          <div className="-mt-2 rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-3 text-xs text-slate-600">
+            Nenhum paciente encontrado.{' '}
+            <button
+              type="button"
+              className="font-medium text-cyan-700 underline"
+              onClick={() => navigate('/pacientes/novo')}
+            >
+              Cadastrar novo paciente
+            </button>
+          </div>
+        ) : null}
 
         <Field label="Profissional">
           <Select

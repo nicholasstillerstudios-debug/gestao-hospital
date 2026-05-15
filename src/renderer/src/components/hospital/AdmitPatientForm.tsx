@@ -159,19 +159,24 @@ export function AdmitPatientForm({
       )}
 
       {patientId == null ? (
-        <Field label="Paciente" required hint="Digite parte do nome, CPF ou CNS para buscar">
-          <Input
-            value={patientQuery}
-            onChange={(e) => setPatientQuery(e.target.value)}
-            placeholder="Buscar paciente…"
-            autoFocus
-          />
+        <>
+          <Field label="Paciente" required hint="Digite parte do nome, CPF ou CNS para buscar">
+            <Input
+              value={patientQuery}
+              onChange={(e) => setPatientQuery(e.target.value)}
+              placeholder="Buscar paciente…"
+              autoFocus
+            />
+          </Field>
+          {/* Lista FORA do <Field> — <Field> renderiza <label>, e cliques em
+              <li> dentro de <label> são redirecionados pro input. */}
           {patients.length > 0 ? (
-            <ul className="mt-2 max-h-44 overflow-y-auto rounded-md border border-slate-200">
+            <div className="-mt-2 max-h-44 overflow-y-auto rounded-md border border-slate-200">
               {patients.map((p) => (
-                <li
+                <button
                   key={p.id}
-                  className={`cursor-pointer border-b border-slate-100 px-3 py-1.5 text-sm last:border-b-0 hover:bg-slate-50 ${
+                  type="button"
+                  className={`block w-full cursor-pointer border-b border-slate-100 px-3 py-1.5 text-left text-sm last:border-b-0 hover:bg-slate-50 ${
                     p.id === selectedPatientId ? 'bg-cyan-50' : ''
                   }`}
                   onClick={() => setSelectedPatientId(p.id)}
@@ -181,11 +186,11 @@ export function AdmitPatientForm({
                     {p.cpf ? `CPF ${formatCpf(p.cpf)}` : 'sem CPF'}
                     {p.birthDate ? ` · ${ageFromBirthDate(p.birthDate)} anos` : ''}
                   </div>
-                </li>
+                </button>
               ))}
-            </ul>
+            </div>
           ) : null}
-        </Field>
+        </>
       ) : null}
 
       {selectedPatient ? (

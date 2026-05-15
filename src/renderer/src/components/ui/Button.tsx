@@ -28,10 +28,12 @@ export function Button({
   variant = 'primary',
   size = 'md',
   className,
+  type = 'button',
   ...rest
 }: Props): React.JSX.Element {
   return (
     <button
+      type={type}
       {...rest}
       className={cn(
         'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ubs-primary)]/60 disabled:cursor-not-allowed',
