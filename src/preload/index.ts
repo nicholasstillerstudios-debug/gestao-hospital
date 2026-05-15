@@ -4,20 +4,42 @@ import { IPC } from '@shared/ipc'
 import type { UpdaterStatus } from '@shared/ipc'
 import type {
   AnonymizeResult,
+  Appointment,
+  AppointmentStatus,
+  AppointmentWithRefs,
   AppSettings,
+  Attendance,
   BrandingLogos,
   BrandingLogoSlot,
   ThemeMode,
   AuditLogEntry,
   AuthUser,
   BackupInfo,
+  BpaConsolidation,
+  BpaRecordInput,
+  BpaRecordWithRefs,
   DashboardStats,
   IpcResult,
   DemoSeedHospitalResult,
   Patient,
+  PatientCall,
+  PatientCallInput,
   PatientInput,
+  Prescription,
+  PrescriptionInput,
+  PrescriptionWithRefs,
   Professional,
   ProductionReportRow,
+  Requisition,
+  RequisitionInput,
+  RequisitionStatus,
+  RequisitionWithRefs,
+  TimeclockDaySummary,
+  TimeclockEntryInput,
+  TimeclockEntryWithRefs,
+  TriageColor,
+  TriageRecord,
+  TriageRecordInput,
   User,
   UserRole,
   Medication,
@@ -114,6 +136,23 @@ export interface ProfessionalInput {
   active?: boolean
 }
 
+export interface AppointmentInput {
+  patientId: number
+  professionalId: number
+  scheduledAt: string
+  durationMin: number
+  reason: string | null
+  notes: string | null
+}
+
+export interface AttendanceInput {
+  subjective: string | null
+  objective: string | null
+  assessment: string | null
+  plan: string | null
+  prescription: string | null
+}
+
 const api = {
   meta: {
     appInfo: (): Promise<{ version: string; name: string; dbPath: string }> =>
@@ -165,6 +204,116 @@ const api = {
       invoke(IPC.patients.exportData, id),
     anonymize: (id: number): Promise<AnonymizeResult> => invoke(IPC.patients.anonymize, id)
   },
+  appointments: {
+    listForDay: (dateIso: string): Promise<AppointmentWithRefs[]> =>
+      invoke(IPC.appointments.listForDay, dateIso),
+    listForPatient: (patientId: number): Promise<AppointmentWithRefs[]> =>
+      invoke(IPC.appointments.listForPatient, patientId),
+    get: (id: number): Promise<AppointmentWithRefs | null> => invoke(IPC.appointments.get, id),
+    create: (input: AppointmentInput): Promise<Appointment> =>
+      invoke(IPC.appointments.create, input),
+    update: (id: number, input: AppointmentInput): Promise<Appointment> =>
+      invoke(IPC.appointments.update, id, input),
+    updateStatus: (id: number, status: AppointmentStatus): Promise<Appointment> =>
+      invoke(IPC.appointments.updateStatus, id, status),
+    checkIn: (id: number): Promise<Appointment> => invoke(IPC.appointments.checkIn, id),
+    setTriage: (id: number, color: TriageColor, notes: string | null): Promise<Appointment> =>
+      invoke(IPC.appointments.setTriage, id, color, notes),
+    cancel: (id: number, reason: string | null): Promise<Appointment> =>
+      invoke(IPC.appointments.cancel, id, reason),
+    queue: (dateIso: string): Promise<AppointmentWithRefs[]> =>
+      invoke(IPC.appointments.queue, dateIso)
+  },
+  attendances: {
+    listForPatient: (patientId: number): Promise<Attendance[]> =>
+      invoke(IPC.attendances.listForPatient, patientId),
+    getByAppointment: (appointmentId: number): Promise<Attendance | null> =>
+      invoke(IPC.attendances.getByAppointment, appointmentId),
+    start: (appointmentId: number): Promise<Attendance> =>
+      invoke(IPC.attendances.start, appointmentId),
+    save: (id: number, input: AttendanceInput): Promise<Attendance> =>
+      invoke(IPC.attendances.save, id, input),
+    finish: (id: number, input: AttendanceInput): Promise<Attendance> =>
+      invoke(IPC.attendances.finish, id, input)
+  },
+  prescriptions: {
+    create: (input: PrescriptionInput): Promise<Prescription> =>
+      invoke(IPC.prescriptions.create, input),
+    listForPatient: (patientId: number): Promise<PrescriptionWithRefs[]> =>
+      invoke(IPC.prescriptions.listForPatient, patientId),
+    get: (id: number): Promise<PrescriptionWithRefs | null> => invoke(IPC.prescriptions.get, id),
+    delete: (id: number): Promise<null> => invoke(IPC.prescriptions.delete, id)
+  },
+  requisitions: {
+    create: (input: RequisitionInput): Promise<Requisition> =>
+      invoke(IPC.requisitions.create, input),
+    listForPatient: (patientId: number): Promise<RequisitionWithRefs[]> =>
+      invoke(IPC.requisitions.listForPatient, patientId),
+    get: (id: number): Promise<RequisitionWithRefs | null> => invoke(IPC.requisitions.get, id),
+    updateStatus: (id: number, status: RequisitionStatus): Promise<Requisition | null> =>
+      invoke(IPC.requisitions.updateStatus, id, status),
+    delete: (id: number): Promise<null> => invoke(IPC.requisitions.delete, id)
+  },
+  calls: {
+    create: (input: PatientCallInput): Promise<PatientCall> => invoke(IPC.calls.create, input),
+    recent: (limit?: number): Promise<PatientCall[]> => invoke(IPC.calls.recent, limit ?? 10),
+    repeat: (id: number): Promise<PatientCall> => invoke(IPC.calls.repeat, id),
+    onNewCall: (handler: (call: PatientCall) => void): (() => void) => {
+      const listener = (_event: unknown, call: PatientCall): void => handler(call)
+      ipcRenderer.on('patient-call:new', listener)
+      return () => ipcRenderer.removeListener('patient-call:new', listener)
+    }
+  },
+  panel: {
+    open: (hash?: string): Promise<{ reused: boolean }> => invoke(IPC.panel.open, hash ?? '/painel')
+  },
+  triages: {
+    save: (input: TriageRecordInput): Promise<TriageRecord> => invoke(IPC.triages.save, input),
+    getByAppointment: (appointmentId: number): Promise<TriageRecord | null> =>
+      invoke(IPC.triages.getByAppointment, appointmentId),
+    listForPatient: (patientId: number, limit?: number): Promise<TriageRecord[]> =>
+      invoke(IPC.triages.listForPatient, patientId, limit ?? 20)
+  },
+  bpa: {
+    listRecords: (filter?: {
+      year?: number
+      month?: number
+      procedureCode?: string
+    }): Promise<BpaRecordWithRefs[]> => invoke(IPC.bpa.listRecords, filter ?? {}),
+    createRecord: (input: BpaRecordInput): Promise<BpaRecordWithRefs> =>
+      invoke(IPC.bpa.createRecord, input),
+    deleteRecord: (id: number): Promise<null> => invoke(IPC.bpa.deleteRecord, id),
+    listConsolidations: (): Promise<BpaConsolidation[]> => invoke(IPC.bpa.listConsolidations),
+    consolidate: (year: number, month: number): Promise<BpaConsolidation> =>
+      invoke(IPC.bpa.consolidate, year, month),
+    getSummary: (
+      year: number,
+      month: number
+    ): Promise<{
+      period: string
+      totalRecords: number
+      totalProcedures: number
+      byProcedure: Array<{ code: string; name: string; count: number; total: number }>
+      consolidation: BpaConsolidation | null
+    }> => invoke(IPC.bpa.getSummary, year, month)
+  },
+  timeclock: {
+    listEntries: (filter?: {
+      professionalId?: number
+      fromDate?: string
+      toDate?: string
+      limit?: number
+    }): Promise<TimeclockEntryWithRefs[]> => invoke(IPC.timeclock.listEntries, filter ?? {}),
+    createEntry: (input: TimeclockEntryInput): Promise<TimeclockEntryWithRefs> =>
+      invoke(IPC.timeclock.createEntry, input),
+    deleteEntry: (id: number): Promise<null> => invoke(IPC.timeclock.deleteEntry, id),
+    getDaySummaries: (
+      professionalId: number,
+      fromDate: string,
+      toDate: string
+    ): Promise<TimeclockDaySummary[]> =>
+      invoke(IPC.timeclock.getDaySummaries, professionalId, fromDate, toDate)
+  },
   reports: {
     dashboard: (dateIso: string): Promise<DashboardStats> => invoke(IPC.reports.dashboard, dateIso),
     production: (startIso: string, endIso: string): Promise<ProductionReportRow[]> =>
@@ -198,7 +347,12 @@ const api = {
   },
   exports: {
     patientsCsv: (): Promise<{ saved: boolean; path: string | null }> =>
-      invoke(IPC.exports.patientsCsv)
+      invoke(IPC.exports.patientsCsv),
+    appointmentsCsv: (
+      startIso: string,
+      endIso: string
+    ): Promise<{ saved: boolean; path: string | null }> =>
+      invoke(IPC.exports.appointmentsCsv, startIso, endIso)
   },
   print: {
     saveCurrentAsPdf: (defaultName?: string): Promise<{ saved: boolean; path: string | null }> =>

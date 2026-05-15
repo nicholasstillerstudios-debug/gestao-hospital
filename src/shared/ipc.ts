@@ -58,7 +58,68 @@ export const IPC = {
     getLogos: 'branding:get-logos'
   },
   exports: {
-    patientsCsv: 'exports:patients-csv'
+    patientsCsv: 'exports:patients-csv',
+    appointmentsCsv: 'exports:appointments-csv'
+  },
+  appointments: {
+    list: 'appointments:list',
+    listForDay: 'appointments:list-for-day',
+    listForPatient: 'appointments:list-for-patient',
+    get: 'appointments:get',
+    create: 'appointments:create',
+    update: 'appointments:update',
+    updateStatus: 'appointments:update-status',
+    checkIn: 'appointments:check-in',
+    setTriage: 'appointments:set-triage',
+    cancel: 'appointments:cancel',
+    queue: 'appointments:queue'
+  },
+  attendances: {
+    listForPatient: 'attendances:list-for-patient',
+    getByAppointment: 'attendances:get-by-appointment',
+    start: 'attendances:start',
+    save: 'attendances:save',
+    finish: 'attendances:finish'
+  },
+  prescriptions: {
+    create: 'prescriptions:create',
+    listForPatient: 'prescriptions:list-for-patient',
+    get: 'prescriptions:get',
+    delete: 'prescriptions:delete'
+  },
+  requisitions: {
+    create: 'requisitions:create',
+    listForPatient: 'requisitions:list-for-patient',
+    get: 'requisitions:get',
+    updateStatus: 'requisitions:update-status',
+    delete: 'requisitions:delete'
+  },
+  calls: {
+    create: 'calls:create',
+    recent: 'calls:recent',
+    repeat: 'calls:repeat'
+  },
+  panel: {
+    open: 'panel:open'
+  },
+  triages: {
+    save: 'triages:save',
+    getByAppointment: 'triages:get-by-appointment',
+    listForPatient: 'triages:list-for-patient'
+  },
+  bpa: {
+    listRecords: 'bpa:list-records',
+    createRecord: 'bpa:create-record',
+    deleteRecord: 'bpa:delete-record',
+    listConsolidations: 'bpa:list-consolidations',
+    consolidate: 'bpa:consolidate',
+    getSummary: 'bpa:get-summary'
+  },
+  timeclock: {
+    listEntries: 'timeclock:list-entries',
+    createEntry: 'timeclock:create-entry',
+    deleteEntry: 'timeclock:delete-entry',
+    getDaySummaries: 'timeclock:get-day-summaries'
   },
   print: {
     saveCurrentAsPdf: 'print:save-current-as-pdf'

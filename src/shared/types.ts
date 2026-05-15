@@ -70,6 +70,322 @@ export interface Patient {
 
 export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'updatedAt' | 'anonymizedAt'>
 
+// ════════════════════════════════════════════════════════════════════
+//   AGENDA / CONSULTAS (UBS)
+// ════════════════════════════════════════════════════════════════════
+
+export type AppointmentStatus =
+  | 'agendado'
+  | 'aguardando'
+  | 'em_atendimento'
+  | 'concluido'
+  | 'cancelado'
+  | 'faltou'
+
+export const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, string> = {
+  agendado: 'Agendado',
+  aguardando: 'Aguardando',
+  em_atendimento: 'Em atendimento',
+  concluido: 'Concluído',
+  cancelado: 'Cancelado',
+  faltou: 'Faltou'
+}
+
+export interface Appointment {
+  id: number
+  patientId: number
+  professionalId: number
+  scheduledAt: string
+  durationMin: number
+  status: AppointmentStatus
+  reason: string | null
+  triageColor: TriageColor | null
+  triageNotes: string | null
+  notes: string | null
+  checkedInAt: string | null
+  startedAt: string | null
+  endedAt: string | null
+  createdByUserId: number | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AppointmentWithRefs extends Appointment {
+  patient: Pick<Patient, 'id' | 'fullName' | 'cpf' | 'cns' | 'birthDate' | 'sex'>
+  professional: Pick<Professional, 'id' | 'fullName' | 'specialty'>
+}
+
+export interface Attendance {
+  id: number
+  appointmentId: number
+  patientId: number
+  professionalId: number
+  startedAt: string
+  endedAt: string | null
+  subjective: string | null
+  objective: string | null
+  assessment: string | null
+  plan: string | null
+  prescription: string | null
+  createdByUserId: number | null
+  createdAt: string
+}
+
+// ════════════════════════════════════════════════════════════════════
+//   Prescrições e Requisições (ambulatorial)
+// ════════════════════════════════════════════════════════════════════
+
+export interface PrescriptionItem {
+  medication: string
+  dose: string | null
+  via: string | null
+  posology: string | null
+  duration: string | null
+  quantity: string | null
+  notes: string | null
+}
+
+export interface Prescription {
+  id: number
+  patientId: number
+  attendanceId: number | null
+  professionalId: number
+  issuedAt: string
+  notes: string | null
+  items: PrescriptionItem[]
+  createdByUserId: number | null
+  createdAt: string
+}
+
+export interface PrescriptionWithRefs extends Prescription {
+  patient: Pick<Patient, 'id' | 'fullName' | 'cpf' | 'cns' | 'birthDate' | 'sex'>
+  professional: Pick<
+    Professional,
+    'id' | 'fullName' | 'specialty' | 'councilType' | 'councilNumber' | 'councilUf'
+  >
+}
+
+export interface PrescriptionInput {
+  patientId: number
+  attendanceId: number | null
+  professionalId: number
+  notes: string | null
+  items: PrescriptionItem[]
+}
+
+export type RequisitionType = 'laboratorio' | 'imagem' | 'procedimento' | 'encaminhamento'
+
+export const REQUISITION_TYPE_LABELS: Record<RequisitionType, string> = {
+  laboratorio: 'Exames laboratoriais',
+  imagem: 'Exames de imagem',
+  procedimento: 'Procedimento / SADT',
+  encaminhamento: 'Encaminhamento'
+}
+
+export type RequisitionStatus = 'solicitada' | 'realizada' | 'cancelada'
+
+export interface Requisition {
+  id: number
+  patientId: number
+  attendanceId: number | null
+  professionalId: number
+  type: RequisitionType
+  items: string[]
+  observations: string | null
+  status: RequisitionStatus
+  issuedAt: string
+  createdByUserId: number | null
+  createdAt: string
+}
+
+export interface RequisitionWithRefs extends Requisition {
+  patient: Pick<Patient, 'id' | 'fullName' | 'cpf' | 'cns' | 'birthDate' | 'sex'>
+  professional: Pick<
+    Professional,
+    'id' | 'fullName' | 'specialty' | 'councilType' | 'councilNumber' | 'councilUf'
+  >
+}
+
+export interface RequisitionInput {
+  patientId: number
+  attendanceId: number | null
+  professionalId: number
+  type: RequisitionType
+  items: string[]
+  observations: string | null
+}
+
+// ════════════════════════════════════════════════════════════════════
+//   Chamadas de paciente e Triagem (Manchester)
+// ════════════════════════════════════════════════════════════════════
+
+export interface PatientCall {
+  id: number
+  patientId: number | null
+  appointmentId: number | null
+  patientName: string
+  room: string
+  message: string | null
+  calledByUserId: number | null
+  calledByName: string | null
+  calledAt: string
+}
+
+export interface PatientCallInput {
+  patientId: number | null
+  appointmentId: number | null
+  patientName: string
+  room: string
+  message?: string | null
+}
+
+export interface TriageRecord {
+  id: number
+  appointmentId: number
+  patientId: number
+  systolicBp: number | null
+  diastolicBp: number | null
+  heartRate: number | null
+  respRate: number | null
+  spo2: number | null
+  temperatureC: number | null
+  glucoseMgDl: number | null
+  painScale: number | null
+  weightKg: number | null
+  heightCm: number | null
+  chiefComplaint: string | null
+  flowchartKey: string | null
+  discriminators: string[]
+  suggestedColor: TriageColor | null
+  finalColor: TriageColor
+  overrideReason: string | null
+  notes: string | null
+  performedByUserId: number | null
+  performedByName: string | null
+  createdAt: string
+}
+
+export interface TriageRecordInput {
+  appointmentId: number
+  systolicBp?: number | null
+  diastolicBp?: number | null
+  heartRate?: number | null
+  respRate?: number | null
+  spo2?: number | null
+  temperatureC?: number | null
+  glucoseMgDl?: number | null
+  painScale?: number | null
+  weightKg?: number | null
+  heightCm?: number | null
+  chiefComplaint?: string | null
+  flowchartKey?: string | null
+  discriminators?: string[]
+  suggestedColor?: TriageColor | null
+  finalColor: TriageColor
+  overrideReason?: string | null
+  notes?: string | null
+}
+
+// ════════════════════════════════════════════════════════════════════
+//   BPA / Produção SUS
+// ════════════════════════════════════════════════════════════════════
+
+export type BpaConsolidationStatus = 'aberto' | 'fechado' | 'exportado'
+
+export interface BpaRecord {
+  id: number
+  patientId: number | null
+  professionalId: number | null
+  procedureCode: string
+  procedureName: string
+  procedureDate: string
+  quantity: number
+  cid10: string | null
+  cboCode: string | null
+  notes: string | null
+  sourceModule: string | null
+  sourceId: number | null
+  consolidationId: number | null
+  createdByUserId: number | null
+  createdAt: string
+}
+
+export interface BpaRecordWithRefs extends BpaRecord {
+  patientName: string | null
+  professionalName: string | null
+}
+
+export interface BpaRecordInput {
+  patientId?: number | null
+  professionalId?: number | null
+  procedureCode: string
+  procedureName: string
+  procedureDate: string
+  quantity: number
+  cid10?: string | null
+  cboCode?: string | null
+  notes?: string | null
+  sourceModule?: string | null
+  sourceId?: number | null
+}
+
+export interface BpaConsolidation {
+  id: number
+  year: number
+  month: number
+  totalRecords: number
+  totalProcedures: number
+  status: BpaConsolidationStatus
+  generatedAt: string | null
+  filePath: string | null
+  notes: string | null
+  createdByUserId: number | null
+  createdAt: string
+  updatedAt: string
+}
+
+// ════════════════════════════════════════════════════════════════════
+//   Ponto Eletrônico
+// ════════════════════════════════════════════════════════════════════
+
+export type TimeclockEntryType = 'entrada' | 'saida' | 'intervalo_inicio' | 'intervalo_fim'
+
+export const TIMECLOCK_ENTRY_TYPE_LABELS: Record<TimeclockEntryType, string> = {
+  entrada: 'Entrada',
+  saida: 'Saída',
+  intervalo_inicio: 'Início de intervalo',
+  intervalo_fim: 'Fim de intervalo'
+}
+
+export interface TimeclockEntry {
+  id: number
+  professionalId: number
+  type: TimeclockEntryType
+  recordedAt: string
+  notes: string | null
+  createdByUserId: number | null
+  createdAt: string
+}
+
+export interface TimeclockEntryWithRefs extends TimeclockEntry {
+  professionalName: string
+}
+
+export interface TimeclockEntryInput {
+  professionalId: number
+  type: TimeclockEntryType
+  recordedAt?: string
+  notes?: string | null
+}
+
+export interface TimeclockDaySummary {
+  date: string
+  entries: TimeclockEntry[]
+  workedMinutes: number
+  breakMinutes: number
+  consistent: boolean
+}
+
 export interface AuditLogEntry {
   id: number
   userId: number | null
@@ -961,6 +1277,22 @@ export const ER_VISIT_STATUS_LABELS: Record<ErVisitStatus, string> = {
 }
 
 export type TriageColor = 'vermelho' | 'laranja' | 'amarelo' | 'verde' | 'azul'
+
+export const TRIAGE_LABELS: Record<TriageColor, string> = {
+  azul: 'Azul — não urgente',
+  verde: 'Verde — pouco urgente',
+  amarelo: 'Amarelo — urgente',
+  laranja: 'Laranja — muito urgente',
+  vermelho: 'Vermelho — emergência'
+}
+
+export const TRIAGE_ORDER: Record<TriageColor, number> = {
+  vermelho: 0,
+  laranja: 1,
+  amarelo: 2,
+  verde: 3,
+  azul: 4
+}
 
 export const TRIAGE_COLOR_LABELS: Record<TriageColor, string> = {
   vermelho: 'Vermelho — Emergência',

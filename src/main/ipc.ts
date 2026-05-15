@@ -22,6 +22,15 @@ import * as fluidBalanceRepo from './repositories/fluidBalance'
 import * as erRepo from './repositories/er'
 import * as surgeryRepo from './repositories/surgery'
 import * as ccihRepo from './repositories/ccih'
+import * as apptsRepo from './repositories/appointments'
+import * as attRepo from './repositories/attendances'
+import * as triagesRepo from './repositories/triages'
+import * as prescriptionsRepo from './repositories/prescriptions'
+import * as requisitionsRepo from './repositories/requisitions'
+import * as callsRepo from './repositories/calls'
+import * as bpaRepo from './repositories/bpa'
+import * as timeclockRepo from './repositories/timeclock'
+import { createSecondaryWindow, isPanelWindow } from './windows'
 import { listAudit, logAudit, purgeAuditOlderThan } from './audit'
 import type {
   AppSettings,
@@ -52,8 +61,18 @@ import type {
   SurgeryOpmeInput,
   IrasCaseInput,
   IsolationInput,
-  InfectionSite
+  InfectionSite,
+  AppointmentStatus,
+  TriageColor,
+  PatientCallInput,
+  PrescriptionInput,
+  RequisitionInput,
+  RequisitionStatus,
+  TriageRecordInput,
+  BpaRecordInput,
+  TimeclockEntryInput
 } from '@shared/types'
+import type { AttendanceSaveInput } from './repositories/attendances'
 
 type Handler = (...args: unknown[]) => unknown | Promise<unknown>
 
@@ -861,6 +880,313 @@ export function registerIpcHandlers(): void {
       (options as { fromDate?: string; toDate?: string }) ?? undefined
     )
   })
+
+  // ============================================================
+  //   AGENDA / CONSULTAS
+  // ============================================================
+  registerHandler(IPC.appointments.listForDay, (dateIso: unknown) => {
+    requireUser()
+    return apptsRepo.listAppointmentsForDay(String(dateIso))
+  })
+  registerHandler(IPC.appointments.listForPatient, (patientId: unknown) => {
+    requireUser()
+    return apptsRepo.listAppointmentsForPatient(Number(patientId))
+  })
+  registerHandler(IPC.appointments.get, (id: unknown) => {
+    requireUser()
+    return apptsRepo.getAppointment(Number(id))
+  })
+  registerHandler(IPC.appointments.create, (input: unknown) => {
+    requireRole('admin', 'recepcao', 'medico', 'enfermagem')
+    return apptsRepo.createAppointment(input as apptsRepo.AppointmentInput)
+  })
+  registerHandler(IPC.appointments.update, (id: unknown, input: unknown) => {
+    requireRole('admin', 'recepcao', 'medico', 'enfermagem')
+    return apptsRepo.updateAppointment(Number(id), input as apptsRepo.AppointmentInput)
+  })
+  registerHandler(IPC.appointments.updateStatus, (id: unknown, status: unknown) => {
+    requireUser()
+    return apptsRepo.updateStatus(Number(id), status as AppointmentStatus)
+  })
+  registerHandler(IPC.appointments.checkIn, (id: unknown) => {
+    requireRole('admin', 'recepcao', 'enfermagem')
+    return apptsRepo.checkIn(Number(id))
+  })
+  registerHandler(IPC.appointments.setTriage, (id: unknown, color: unknown, notes: unknown) => {
+    requireRole('admin', 'enfermagem', 'medico')
+    return apptsRepo.setTriage(
+      Number(id),
+      color as TriageColor,
+      notes == null ? null : String(notes)
+    )
+  })
+  registerHandler(IPC.appointments.cancel, (id: unknown, reason: unknown) => {
+    requireRole('admin', 'recepcao', 'enfermagem')
+    return apptsRepo.cancelAppointment(Number(id), reason == null ? null : String(reason))
+  })
+  registerHandler(IPC.appointments.queue, (dateIso: unknown) => {
+    requireUser()
+    return apptsRepo.getQueue(String(dateIso))
+  })
+
+  // ============================================================
+  //   ATENDIMENTOS (SOAP)
+  // ============================================================
+  registerHandler(IPC.attendances.listForPatient, (patientId: unknown) => {
+    requireUser()
+    return attRepo.listForPatient(Number(patientId))
+  })
+  registerHandler(IPC.attendances.getByAppointment, (appointmentId: unknown) => {
+    requireUser()
+    return attRepo.getByAppointment(Number(appointmentId))
+  })
+  registerHandler(IPC.attendances.start, (appointmentId: unknown) => {
+    requireRole('admin', 'enfermagem', 'medico')
+    return attRepo.startAttendance(Number(appointmentId))
+  })
+  registerHandler(IPC.attendances.save, (id: unknown, input: unknown) => {
+    requireRole('admin', 'enfermagem', 'medico')
+    return attRepo.saveAttendance(Number(id), input as AttendanceSaveInput)
+  })
+  registerHandler(IPC.attendances.finish, (id: unknown, input: unknown) => {
+    requireRole('admin', 'enfermagem', 'medico')
+    return attRepo.finishAttendance(Number(id), input as AttendanceSaveInput)
+  })
+
+  // ============================================================
+  //   PRESCRIÇÕES (ambulatorial)
+  // ============================================================
+  registerHandler(IPC.prescriptions.create, (input: unknown) => {
+    requireRole('admin', 'medico')
+    return prescriptionsRepo.createPrescription(input as PrescriptionInput)
+  })
+  registerHandler(IPC.prescriptions.listForPatient, (patientId: unknown) => {
+    requireUser()
+    return prescriptionsRepo.listForPatient(Number(patientId))
+  })
+  registerHandler(IPC.prescriptions.get, (id: unknown) => {
+    requireUser()
+    return prescriptionsRepo.getById(Number(id))
+  })
+  registerHandler(IPC.prescriptions.delete, (id: unknown) => {
+    requireRole('admin', 'medico')
+    prescriptionsRepo.deletePrescription(Number(id))
+    return null
+  })
+
+  // ============================================================
+  //   REQUISIÇÕES (exames / encaminhamentos)
+  // ============================================================
+  registerHandler(IPC.requisitions.create, (input: unknown) => {
+    requireRole('admin', 'medico', 'enfermagem')
+    return requisitionsRepo.createRequisition(input as RequisitionInput)
+  })
+  registerHandler(IPC.requisitions.listForPatient, (patientId: unknown) => {
+    requireUser()
+    return requisitionsRepo.listForPatient(Number(patientId))
+  })
+  registerHandler(IPC.requisitions.get, (id: unknown) => {
+    requireUser()
+    return requisitionsRepo.getById(Number(id))
+  })
+  registerHandler(IPC.requisitions.updateStatus, (id: unknown, status: unknown) => {
+    requireRole('admin', 'medico', 'enfermagem')
+    return requisitionsRepo.updateStatus(Number(id), status as RequisitionStatus)
+  })
+  registerHandler(IPC.requisitions.delete, (id: unknown) => {
+    requireRole('admin', 'medico')
+    requisitionsRepo.deleteRequisition(Number(id))
+    return null
+  })
+
+  // ============================================================
+  //   Appointments CSV export
+  // ============================================================
+  registerHandler(IPC.exports.appointmentsCsv, async (startIso: unknown, endIso: unknown) => {
+    requireRole('admin', 'recepcao')
+    const csv = exportsRepo.exportAppointmentsCsv(String(startIso), String(endIso))
+    const ts = new Date().toISOString().replace(/[:]/g, '-').replace(/\..+/, '')
+    const chosen = await dialog.showSaveDialog({
+      title: 'Exportar agenda (CSV)',
+      defaultPath: `agenda-${String(startIso)}-a-${String(endIso)}-${ts}.csv`,
+      filters: [{ name: 'CSV', extensions: ['csv'] }]
+    })
+    if (chosen.canceled || !chosen.filePath) {
+      return { saved: false, path: null as string | null }
+    }
+    writeFileSync(chosen.filePath, csv, { encoding: 'utf8' })
+    return { saved: true, path: chosen.filePath }
+  })
+
+  // ============================================================
+  //   CHAMADAS de paciente (painel)
+  // ============================================================
+  registerHandler(IPC.calls.create, (raw: unknown) => {
+    const user = requireUser()
+    const input = raw as PatientCallInput
+    const call = callsRepo.create(
+      {
+        patientId: input?.patientId ?? null,
+        appointmentId: input?.appointmentId ?? null,
+        patientName: String(input?.patientName ?? ''),
+        room: String(input?.room ?? ''),
+        message: input?.message ?? null
+      },
+      user.id,
+      user.fullName
+    )
+    for (const win of BrowserWindow.getAllWindows()) {
+      win.webContents.send('patient-call:new', call)
+    }
+    return call
+  })
+
+  // O painel de chamada é uma rota pública; libera leitura quando vier
+  // de uma janela de painel registrada (criada por panel.open).
+  ipcMain.handle(IPC.calls.recent, async (event, limit: unknown) => {
+    try {
+      const isPanel = isPanelWindow(event.sender.id)
+      if (!isPanel) requireUser()
+      const n = typeof limit === 'number' && Number.isFinite(limit) ? limit : 10
+      return { ok: true, data: callsRepo.recent(n) }
+    } catch (err) {
+      const error = err as Error & { code?: string }
+      return {
+        ok: false,
+        error: {
+          code: error.code ?? 'INTERNAL_ERROR',
+          message: error.message || 'Erro interno do servidor.'
+        }
+      }
+    }
+  })
+
+  registerHandler(IPC.calls.repeat, (callId: unknown) => {
+    const user = requireUser()
+    const id = Number(callId)
+    if (!Number.isFinite(id) || id <= 0) {
+      throw Object.assign(new Error('ID de chamada inválido.'), { code: 'VALIDATION_ERROR' })
+    }
+    const call = callsRepo.repeat(id, user.id, user.fullName)
+    for (const win of BrowserWindow.getAllWindows()) {
+      win.webContents.send('patient-call:new', call)
+    }
+    return call
+  })
+
+  // ============================================================
+  //   TRIAGEM Manchester
+  // ============================================================
+  registerHandler(IPC.triages.save, (raw: unknown) => {
+    const user = requireRole('admin', 'enfermagem', 'medico')
+    const input = raw as TriageRecordInput
+    if (!input || typeof input !== 'object') {
+      throw Object.assign(new Error('Dados de triagem inválidos.'), { code: 'VALIDATION_ERROR' })
+    }
+    return triagesRepo.save(input, user.id, user.fullName)
+  })
+  registerHandler(IPC.triages.getByAppointment, (id: unknown) => {
+    requireUser()
+    const apptId = Number(id)
+    if (!Number.isFinite(apptId) || apptId <= 0) {
+      throw Object.assign(new Error('ID de atendimento inválido.'), { code: 'VALIDATION_ERROR' })
+    }
+    return triagesRepo.getByAppointment(apptId)
+  })
+  registerHandler(IPC.triages.listForPatient, (id: unknown, limit: unknown) => {
+    requireUser()
+    const patientId = Number(id)
+    if (!Number.isFinite(patientId) || patientId <= 0) {
+      throw Object.assign(new Error('ID de paciente inválido.'), { code: 'VALIDATION_ERROR' })
+    }
+    const n = typeof limit === 'number' && Number.isFinite(limit) ? limit : 20
+    return triagesRepo.listForPatient(patientId, n)
+  })
+
+  // ============================================================
+  //   PAINEL (abrir janela auxiliar)
+  // ============================================================
+  registerHandler(IPC.panel.open, (hash: unknown) => {
+    requireUser()
+    const raw = typeof hash === 'string' ? hash : '/painel'
+    const safe = raw.startsWith('/') ? raw : `/${raw}`
+    const existing = BrowserWindow.getAllWindows().find((w) =>
+      w.webContents.getURL().includes(`#${safe}`)
+    )
+    if (existing) {
+      if (existing.isMinimized()) existing.restore()
+      existing.focus()
+      return { reused: true }
+    }
+    createSecondaryWindow(safe)
+    return { reused: false }
+  })
+
+  // ============================================================
+  //   BPA / Produção SUS
+  // ============================================================
+  registerHandler(IPC.bpa.listRecords, (options: unknown) => {
+    requireUser()
+    return bpaRepo.listRecords(
+      (options as { year?: number; month?: number; procedureCode?: string }) ?? undefined
+    )
+  })
+  registerHandler(IPC.bpa.createRecord, (input: unknown) => {
+    requireRole('admin', 'medico')
+    return bpaRepo.createRecord(input as BpaRecordInput)
+  })
+  registerHandler(IPC.bpa.deleteRecord, (id: unknown) => {
+    requireRole('admin', 'medico')
+    bpaRepo.deleteRecord(Number(id))
+    return null
+  })
+  registerHandler(IPC.bpa.listConsolidations, () => {
+    requireUser()
+    return bpaRepo.listConsolidations()
+  })
+  registerHandler(IPC.bpa.consolidate, (year: unknown, month: unknown) => {
+    requireRole('admin', 'medico')
+    return bpaRepo.consolidateMonth(Number(year), Number(month))
+  })
+  registerHandler(IPC.bpa.getSummary, (year: unknown, month: unknown) => {
+    requireUser()
+    return bpaRepo.getSummaryForPeriod(Number(year), Number(month))
+  })
+
+  // ============================================================
+  //   PONTO ELETRÔNICO
+  // ============================================================
+  registerHandler(IPC.timeclock.listEntries, (options: unknown) => {
+    requireUser()
+    return timeclockRepo.listEntries(
+      (options as {
+        professionalId?: number
+        fromDate?: string
+        toDate?: string
+        limit?: number
+      }) ?? undefined
+    )
+  })
+  registerHandler(IPC.timeclock.createEntry, (input: unknown) => {
+    requireUser()
+    return timeclockRepo.createEntry(input as TimeclockEntryInput)
+  })
+  registerHandler(IPC.timeclock.deleteEntry, (id: unknown) => {
+    requireUser()
+    timeclockRepo.deleteEntry(Number(id))
+    return null
+  })
+  registerHandler(
+    IPC.timeclock.getDaySummaries,
+    (professionalId: unknown, fromDate: unknown, toDate: unknown) => {
+      requireUser()
+      return timeclockRepo.getDaySummaries(
+        Number(professionalId),
+        String(fromDate),
+        String(toDate)
+      )
+    }
+  )
 
   // ---------- Print to PDF ----------
   // Captura o conteúdo da janela atual como PDF A4 e abre Salvar como.

@@ -21,6 +21,21 @@ import { WardsAdminPage } from './pages/WardsAdmin'
 import { EmergencyRoomPage } from './pages/EmergencyRoom'
 import { SurgicalCenterPage } from './pages/SurgicalCenter'
 import { CCIHPage } from './pages/CCIH'
+import { ConsultasPage } from './pages/Consultas'
+import { AttendancePage } from './pages/Attendance'
+import { ReceptionPage } from './pages/Reception'
+import { QueuePage } from './pages/Queue'
+import { TriagePage } from './pages/Triage'
+import { CallPanelPage } from './pages/CallPanel'
+import { BPAPage } from './pages/BPA'
+import { PontoPage } from './pages/Ponto'
+import { ExamesPage } from './pages/Exames'
+import {
+  PrintAttendancePage,
+  PrintAttestationPage,
+  PrintPrescriptionPage,
+  PrintRequisitionPage
+} from './pages/Print'
 
 function App(): React.JSX.Element {
   const bootstrap = useAuth((s) => s.bootstrap)
@@ -45,6 +60,39 @@ function App(): React.JSX.Element {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/trocar-senha" element={<ChangePasswordPage />} />
+      <Route path="/painel" element={<CallPanelPage />} />
+      <Route
+        path="/imprimir/ficha/:appointmentId"
+        element={
+          <ProtectedRoute>
+            <PrintAttendancePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/imprimir/atestado/:appointmentId"
+        element={
+          <ProtectedRoute>
+            <PrintAttestationPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/imprimir/receituario/:id"
+        element={
+          <ProtectedRoute>
+            <PrintPrescriptionPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/imprimir/requisicao/:id"
+        element={
+          <ProtectedRoute>
+            <PrintRequisitionPage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         element={
           <ProtectedRoute>
@@ -126,6 +174,70 @@ function App(): React.JSX.Element {
           element={
             <ProtectedRoute roles={['admin', 'medico', 'enfermagem']}>
               <CCIHPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/consultas"
+          element={
+            <ProtectedRoute roles={['admin', 'recepcao', 'medico', 'enfermagem']}>
+              <ConsultasPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/atendimento/:appointmentId"
+          element={
+            <ProtectedRoute roles={['admin', 'medico']}>
+              <AttendancePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recepcao"
+          element={
+            <ProtectedRoute roles={['admin', 'recepcao']}>
+              <ReceptionPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/fila"
+          element={
+            <ProtectedRoute roles={['admin', 'recepcao', 'enfermagem', 'medico']}>
+              <QueuePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/triagem"
+          element={
+            <ProtectedRoute roles={['admin', 'enfermagem', 'medico']}>
+              <TriagePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/exames"
+          element={
+            <ProtectedRoute roles={['admin', 'medico']}>
+              <ExamesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bpa"
+          element={
+            <ProtectedRoute roles={['admin', 'medico']}>
+              <BPAPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ponto"
+          element={
+            <ProtectedRoute>
+              <PontoPage />
             </ProtectedRoute>
           }
         />

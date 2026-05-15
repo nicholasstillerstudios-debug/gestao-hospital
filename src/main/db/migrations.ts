@@ -908,6 +908,79 @@ const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_isolations_active
         ON isolations(admission_id) WHERE ended_at IS NULL;
     `
+  },
+  {
+    id: 14,
+    name: 'bpa_timeclock',
+    sql: `
+      -- ╔══════════════════════════════════════════════════════════════╗
+      -- ║  BPA / Produção SUS                                          ║
+      -- ╚══════════════════════════════════════════════════════════════╝
+      -- BPA = Boletim de Produção Ambulatorial. Cada linha é um
+      -- procedimento realizado (consulta, exame, vacinação, dispensação)
+      -- com código SIGTAP. As linhas são consolidadas mensalmente para
+      -- envio ao DATASUS (geração de arquivo BPA-C/BPA-I no futuro).
+      CREATE TABLE IF NOT EXISTS bpa_records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id INTEGER REFERENCES patients(id) ON DELETE SET NULL,
+        professional_id INTEGER REFERENCES professionals(id) ON DELETE SET NULL,
+        procedure_code TEXT NOT NULL,
+        procedure_name TEXT NOT NULL,
+        procedure_date TEXT NOT NULL,
+        quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
+        cid10 TEXT,
+        cbo_code TEXT,
+        notes TEXT,
+        source_module TEXT,
+        source_id INTEGER,
+        consolidation_id INTEGER,
+        created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_bpa_records_date ON bpa_records(procedure_date);
+      CREATE INDEX IF NOT EXISTS idx_bpa_records_procedure ON bpa_records(procedure_code);
+      CREATE INDEX IF NOT EXISTS idx_bpa_records_consolidation ON bpa_records(consolidation_id);
+
+      -- Consolidações mensais (uma por competência: ano + mês).
+      CREATE TABLE IF NOT EXISTS bpa_consolidations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        year INTEGER NOT NULL,
+        month INTEGER NOT NULL CHECK (month BETWEEN 1 AND 12),
+        total_records INTEGER NOT NULL DEFAULT 0,
+        total_procedures INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'aberto'
+          CHECK (status IN ('aberto','fechado','exportado')),
+        generated_at TEXT,
+        file_path TEXT,
+        notes TEXT,
+        created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_bpa_consolidations_period
+        ON bpa_consolidations(year, month);
+
+      -- ╔══════════════════════════════════════════════════════════════╗
+      -- ║  PONTO ELETRÔNICO                                            ║
+      -- ╚══════════════════════════════════════════════════════════════╝
+      -- Registro de entrada/saída do profissional. Cada batida é uma
+      -- linha; o saldo da jornada é calculado em consulta. Modelo simples:
+      -- não enforça pares de entrada/saída automaticamente (auditoria
+      -- humana faz isso). Notas são livres para justificar atrasos.
+      CREATE TABLE IF NOT EXISTS timeclock_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        professional_id INTEGER NOT NULL REFERENCES professionals(id) ON DELETE CASCADE,
+        type TEXT NOT NULL CHECK (type IN ('entrada','saida','intervalo_inicio','intervalo_fim')),
+        recorded_at TEXT NOT NULL DEFAULT (datetime('now')),
+        notes TEXT,
+        created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_timeclock_professional
+        ON timeclock_entries(professional_id);
+      CREATE INDEX IF NOT EXISTS idx_timeclock_recorded
+        ON timeclock_entries(recorded_at);
+    `
   }
 ]
 

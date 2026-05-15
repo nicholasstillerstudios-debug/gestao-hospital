@@ -273,40 +273,186 @@ const Icon = {
       <path d="M9 12h6" />
       <path d="M12 9v6" />
     </svg>
+  ),
+  clock: (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-[18px] w-[18px]"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  ),
+  beaker: (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-[18px] w-[18px]"
+      aria-hidden
+    >
+      <path d="M9 3h6" />
+      <path d="M10 3v6L4 20a2 2 0 0 0 1.7 3h12.6A2 2 0 0 0 20 20L14 9V3" />
+      <path d="M7 16h10" />
+    </svg>
+  ),
+  docs: (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-[18px] w-[18px]"
+      aria-hidden
+    >
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z" />
+      <path d="M14 3v5h5" />
+      <path d="M8 13h8" />
+      <path d="M8 17h5" />
+    </svg>
+  ),
+  monitor: (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-[18px] w-[18px]"
+      aria-hidden
+    >
+      <rect x="3" y="4" width="18" height="13" rx="2" />
+      <path d="M8 21h8" />
+      <path d="M12 17v4" />
+    </svg>
   )
 }
 
-const ITEMS: NavItem[] = [
-  { to: '/', label: 'Início', icon: Icon.home },
-  { to: '/pacientes', label: 'Pacientes', icon: Icon.users },
+interface NavGroup {
+  category: string
+  items: NavItem[]
+}
+
+const GROUPS: NavGroup[] = [
   {
-    to: '/ps',
-    label: 'Pronto-Socorro',
-    icon: Icon.ambulance,
-    roles: ['admin', 'recepcao', 'enfermagem', 'medico']
-  },
-  { to: '/leitos', label: 'Leitos', icon: Icon.bed },
-  {
-    to: '/internacoes',
-    label: 'Internações',
-    icon: Icon.clipboard,
-    roles: ['admin', 'medico', 'enfermagem']
+    category: 'Geral',
+    items: [{ to: '/', label: 'Dashboard', icon: Icon.home }]
   },
   {
-    to: '/cirurgico',
-    label: 'Centro Cirúrgico',
-    icon: Icon.scalpel,
-    roles: ['admin', 'medico', 'enfermagem']
+    category: 'Atendimento',
+    items: [
+      { to: '/pacientes', label: 'Pacientes', icon: Icon.users },
+      {
+        to: '/recepcao',
+        label: 'Recepção',
+        icon: Icon.doorOpen,
+        roles: ['admin', 'recepcao']
+      },
+      {
+        to: '/consultas',
+        label: 'Consultas',
+        icon: Icon.calendar,
+        roles: ['admin', 'recepcao', 'medico', 'enfermagem']
+      },
+      {
+        to: '/fila',
+        label: 'Fila',
+        icon: Icon.triage,
+        roles: ['admin', 'recepcao', 'enfermagem', 'medico']
+      },
+      {
+        to: '/triagem',
+        label: 'Triagem',
+        icon: Icon.stethoscope,
+        roles: ['admin', 'enfermagem', 'medico']
+      },
+      { to: '/painel', label: 'Painel de Chamadas', icon: Icon.monitor }
+    ]
   },
   {
-    to: '/ccih',
-    label: 'CCIH',
-    icon: Icon.shield,
-    roles: ['admin', 'medico', 'enfermagem']
+    category: 'Emergência e cirurgia',
+    items: [
+      {
+        to: '/ps',
+        label: 'Pronto-Socorro',
+        icon: Icon.ambulance,
+        roles: ['admin', 'recepcao', 'enfermagem', 'medico']
+      },
+      {
+        to: '/cirurgico',
+        label: 'Centro Cirúrgico',
+        icon: Icon.scalpel,
+        roles: ['admin', 'medico', 'enfermagem']
+      }
+    ]
   },
-  { to: '/farmacia', label: 'Farmácia', icon: Icon.pill, roles: ['admin', 'farmacia'] },
-  { to: '/relatorios', label: 'Relatórios', icon: Icon.chart, roles: ['admin', 'medico'] },
-  { to: '/admin', label: 'Administração', icon: Icon.cog, roles: ['admin'] }
+  {
+    category: 'Clínico',
+    items: [
+      {
+        to: '/exames',
+        label: 'Exames',
+        icon: Icon.beaker,
+        roles: ['admin', 'medico']
+      },
+      {
+        to: '/internacoes',
+        label: 'Internações',
+        icon: Icon.clipboard,
+        roles: ['admin', 'medico', 'enfermagem']
+      },
+      { to: '/leitos', label: 'Leitos', icon: Icon.bed },
+      {
+        to: '/imprimir/ficha/0',
+        label: 'Documentos',
+        icon: Icon.docs,
+        roles: ['admin', 'recepcao', 'medico', 'enfermagem']
+      }
+    ]
+  },
+  {
+    category: 'Suprimentos',
+    items: [
+      { to: '/farmacia', label: 'Farmácia', icon: Icon.pill, roles: ['admin', 'farmacia'] }
+    ]
+  },
+  {
+    category: 'Segurança',
+    items: [
+      {
+        to: '/ccih',
+        label: 'CCIH',
+        icon: Icon.shield,
+        roles: ['admin', 'medico', 'enfermagem']
+      }
+    ]
+  },
+  {
+    category: 'SUS',
+    items: [
+      { to: '/bpa', label: 'BPA / Produção', icon: Icon.chart, roles: ['admin', 'medico'] }
+    ]
+  },
+  {
+    category: 'Administração',
+    items: [
+      { to: '/ponto', label: 'Ponto', icon: Icon.clock },
+      { to: '/relatorios', label: 'Relatórios', icon: Icon.chart, roles: ['admin', 'medico'] },
+      { to: '/admin', label: 'Administração', icon: Icon.cog, roles: ['admin'] }
+    ]
+  }
 ]
 
 const PRODUCT_LABEL: { title: string; subtitle: string } = {
@@ -344,23 +490,33 @@ export function Layout(): React.JSX.Element {
           </div>
         </div>
         <div className="app-sidebar-divider" aria-hidden />
-        <nav className="flex-1 space-y-0.5 px-3 py-4">
-          <div className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/40">
-            Operação
-          </div>
-          {ITEMS.filter((item) => !item.roles || item.roles.includes(user.role)).map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/'}
-              className={({ isActive }) => cn('app-nav-link', isActive && 'is-active')}
-            >
-              <span className="flex h-6 w-6 flex-none items-center justify-center">
-                {item.icon}
-              </span>
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
+        <nav className="flex-1 space-y-3 overflow-y-auto px-3 py-4">
+          {GROUPS.map((group) => {
+            const visible = group.items.filter(
+              (item) => !item.roles || item.roles.includes(user.role)
+            )
+            if (visible.length === 0) return null
+            return (
+              <div key={group.category} className="space-y-0.5">
+                <div className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/40">
+                  {group.category}
+                </div>
+                {visible.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.to === '/'}
+                    className={({ isActive }) => cn('app-nav-link', isActive && 'is-active')}
+                  >
+                    <span className="flex h-6 w-6 flex-none items-center justify-center">
+                      {item.icon}
+                    </span>
+                    <span>{item.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            )
+          })}
         </nav>
         <div className="app-sidebar-divider" aria-hidden />
         <div className="px-3 py-3">
