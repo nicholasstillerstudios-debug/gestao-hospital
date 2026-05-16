@@ -1171,6 +1171,10 @@ function UnitTab(): React.JSX.Element {
   const [unitAddress, setUnitAddress] = useState('')
   const [unitPhone, setUnitPhone] = useState('')
   const [unitMunicipality, setUnitMunicipality] = useState('')
+  const [unitCnpj, setUnitCnpj] = useState('')
+  const [unitIbge, setUnitIbge] = useState('')
+  const [unitOrgaoEmissor, setUnitOrgaoEmissor] = useState('')
+  const [unitOrgaoDestino, setUnitOrgaoDestino] = useState<'M' | 'E'>('M')
   const [unitType, setUnitTypeState] = useState<UnitType>('hospital')
   const [saving, setSaving] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
@@ -1186,6 +1190,10 @@ function UnitTab(): React.JSX.Element {
       setUnitAddress(current.unitAddress)
       setUnitPhone(current.unitPhone)
       setUnitMunicipality(current.unitMunicipality)
+      setUnitCnpj(current.unitCnpj)
+      setUnitIbge(current.unitIbge)
+      setUnitOrgaoEmissor(current.unitOrgaoEmissor)
+      setUnitOrgaoDestino(current.unitOrgaoDestino)
       setUnitTypeState(current.unitType)
     } catch (err) {
       setError(`Não foi possível carregar os dados da unidade: ${(err as Error).message}`)
@@ -1207,7 +1215,11 @@ function UnitTab(): React.JSX.Element {
         unitAddress,
         unitPhone,
         unitMunicipality,
-        unitType
+        unitType,
+        unitCnpj,
+        unitIbge,
+        unitOrgaoEmissor,
+        unitOrgaoDestino
       })
       setStoreUnitType(unitType)
       setNotice('Dados da unidade atualizados.')
@@ -1288,6 +1300,44 @@ function UnitTab(): React.JSX.Element {
           </Select>
         </Field>
       </div>
+
+      <fieldset className="mt-5 rounded-md border border-slate-200 p-3">
+        <legend className="px-2 text-xs font-semibold uppercase tracking-wider text-slate-600">
+          Dados SUS (BPA-MAGNÉTICO)
+        </legend>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <Field label="CNPJ do estabelecimento" hint="14 dígitos sem formatação">
+            <Input
+              value={unitCnpj}
+              onChange={(e) => setUnitCnpj(e.target.value.replace(/\D/g, '').slice(0, 14))}
+              placeholder="00000000000000"
+            />
+          </Field>
+          <Field label="Código IBGE do município" hint="6 dígitos">
+            <Input
+              value={unitIbge}
+              onChange={(e) => setUnitIbge(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="000000"
+            />
+          </Field>
+          <Field label="Sigla do órgão emissor" hint="Até 6 caracteres, ex.: SMS">
+            <Input
+              value={unitOrgaoEmissor}
+              onChange={(e) => setUnitOrgaoEmissor(e.target.value.toUpperCase().slice(0, 6))}
+              placeholder="SMS"
+            />
+          </Field>
+          <Field label="Destino do BPA">
+            <Select
+              value={unitOrgaoDestino}
+              onChange={(e) => setUnitOrgaoDestino(e.target.value === 'E' ? 'E' : 'M')}
+            >
+              <option value="M">Municipal (SMS)</option>
+              <option value="E">Estadual (SES)</option>
+            </Select>
+          </Field>
+        </div>
+      </fieldset>
       {notice ? (
         <div className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700 ring-1 ring-emerald-200">
           {notice}

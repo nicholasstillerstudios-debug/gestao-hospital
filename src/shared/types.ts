@@ -515,6 +515,14 @@ export interface AppSettings {
   letterheadAlign: 'left' | 'center'
   /** Exibir a linha CNES/endereço/telefone abaixo dos títulos. */
   letterheadShowFooter: boolean
+  /** CNPJ do estabelecimento (14 dígitos) — usado no header do BPA-MAG. */
+  unitCnpj: string
+  /** Código IBGE do município do estabelecimento (6 dígitos). */
+  unitIbge: string
+  /** Sigla / nome curto do órgão emissor (até 30). Default = unitName. */
+  unitOrgaoEmissor: string
+  /** Destino do BPA: "M" (municipal) ou "E" (estadual). */
+  unitOrgaoDestino: 'M' | 'E'
 }
 
 export type RunMode = 'standalone' | 'server' | 'client'

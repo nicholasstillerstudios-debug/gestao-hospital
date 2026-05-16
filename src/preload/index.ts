@@ -298,7 +298,12 @@ const api = {
       totalProcedures: number
       byProcedure: Array<{ code: string; name: string; count: number; total: number }>
       consolidation: BpaConsolidation | null
-    }> => invoke(IPC.bpa.getSummary, year, month)
+    }> => invoke(IPC.bpa.getSummary, year, month),
+    exportFile: (
+      year: number,
+      month: number
+    ): Promise<{ saved: boolean; path: string | null; lineCount: number }> =>
+      invoke(IPC.bpa.exportFile, year, month)
   },
   timeclock: {
     listEntries: (filter?: {

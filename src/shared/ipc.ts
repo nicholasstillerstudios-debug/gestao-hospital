@@ -113,7 +113,8 @@ export const IPC = {
     deleteRecord: 'bpa:delete-record',
     listConsolidations: 'bpa:list-consolidations',
     consolidate: 'bpa:consolidate',
-    getSummary: 'bpa:get-summary'
+    getSummary: 'bpa:get-summary',
+    exportFile: 'bpa:export-file'
   },
   timeclock: {
     listEntries: 'timeclock:list-entries',

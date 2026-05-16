@@ -69,6 +69,20 @@ export function BPAPage(): React.JSX.Element {
     void load()
   }, [year, month]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const handleExportFile = async (): Promise<void> => {
+    setError(null)
+    try {
+      const r = await window.api.bpa.exportFile(year, month)
+      if (r.saved && r.path) {
+        window.alert(
+          `Arquivo BPA-MAGNÉTICO gerado:\n${r.path}\n\n${r.lineCount} linha(s) tipo 03 (BPA-I).`
+        )
+      }
+    } catch (err) {
+      setError((err as Error).message)
+    }
+  }
+
   const handleConsolidate = async (): Promise<void> => {
     if (
       !window.confirm(
@@ -102,6 +116,9 @@ export function BPAPage(): React.JSX.Element {
               onClick={() => navigate(`/imprimir/bpa/${year}/${month}`)}
             >
               Imprimir BPA-I
+            </Button>
+            <Button variant="outline" onClick={() => void handleExportFile()}>
+              Exportar .bpa
             </Button>
             <Button onClick={() => void handleConsolidate()}>Consolidar mês</Button>
           </>

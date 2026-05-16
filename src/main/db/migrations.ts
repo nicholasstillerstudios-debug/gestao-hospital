@@ -1061,6 +1061,21 @@ const MIGRATIONS: Migration[] = [
       CREATE UNIQUE INDEX IF NOT EXISTS idx_professionals_cns
         ON professionals(cns) WHERE cns IS NOT NULL;
     `
+  },
+  {
+    id: 20,
+    name: 'sus_export_settings',
+    sql: `
+      -- Dados do estabelecimento para gerar o BPA-MAGNÉTICO (SIA-SUS).
+      INSERT OR IGNORE INTO app_settings (key, value, updated_at)
+        VALUES ('unitCnpj', '', datetime('now'));
+      INSERT OR IGNORE INTO app_settings (key, value, updated_at)
+        VALUES ('unitIbge', '', datetime('now'));
+      INSERT OR IGNORE INTO app_settings (key, value, updated_at)
+        VALUES ('unitOrgaoEmissor', '', datetime('now'));
+      INSERT OR IGNORE INTO app_settings (key, value, updated_at)
+        VALUES ('unitOrgaoDestino', 'M', datetime('now'));
+    `
   }
 ]
 

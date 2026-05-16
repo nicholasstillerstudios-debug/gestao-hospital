@@ -34,7 +34,11 @@ const DEFAULTS: AppSettings = {
   driveAutoEnabled: false,
   letterheadLogoHeight: 56,
   letterheadAlign: 'center',
-  letterheadShowFooter: true
+  letterheadShowFooter: true,
+  unitCnpj: '',
+  unitIbge: '',
+  unitOrgaoEmissor: '',
+  unitOrgaoDestino: 'M'
 }
 
 function parseLogoHeight(raw: string | undefined): number {
@@ -68,7 +72,10 @@ const STRING_KEYS: Array<keyof AppSettings> = [
   'driveClientSecret',
   'driveRefreshToken',
   'driveFolderId',
-  'driveLastBackupAt'
+  'driveLastBackupAt',
+  'unitCnpj',
+  'unitIbge',
+  'unitOrgaoEmissor'
 ]
 
 function readString(map: Map<string, string>, key: keyof AppSettings, fallback: string): string {
@@ -116,7 +123,11 @@ export function getSettings(): AppSettings {
     driveAutoEnabled: map.get('driveAutoEnabled') === '1',
     letterheadLogoHeight: parseLogoHeight(map.get('letterheadLogoHeight')),
     letterheadAlign: map.get('letterheadAlign') === 'left' ? 'left' : 'center',
-    letterheadShowFooter: map.get('letterheadShowFooter') !== '0'
+    letterheadShowFooter: map.get('letterheadShowFooter') !== '0',
+    unitCnpj: readString(map, 'unitCnpj', ''),
+    unitIbge: readString(map, 'unitIbge', ''),
+    unitOrgaoEmissor: readString(map, 'unitOrgaoEmissor', ''),
+    unitOrgaoDestino: map.get('unitOrgaoDestino') === 'E' ? 'E' : 'M'
   }
 }
 
@@ -187,6 +198,9 @@ export function updateSettings(input: Partial<AppSettings>): AppSettings {
     }
     if (input.letterheadShowFooter != null) {
       stmt.run('letterheadShowFooter', input.letterheadShowFooter ? '1' : '0')
+    }
+    if (input.unitOrgaoDestino != null) {
+      stmt.run('unitOrgaoDestino', input.unitOrgaoDestino === 'E' ? 'E' : 'M')
     }
   })
   tx()

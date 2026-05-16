@@ -1199,6 +1199,29 @@ export function registerIpcHandlers(): void {
     requireUser()
     return bpaRepo.getSummaryForPeriod(Number(year), Number(month))
   })
+  registerHandler(IPC.bpa.exportFile, async (year: unknown, month: unknown) => {
+    requireRole('admin', 'medico')
+    const { generateBpaFile } = await import('./bpa-export')
+    const result = generateBpaFile(Number(year), Number(month))
+    const chosen = await dialog.showSaveDialog({
+      title: 'Exportar arquivo BPA-MAGNÉTICO',
+      defaultPath: result.suggestedName,
+      filters: [
+        { name: 'Arquivo BPA', extensions: ['bpa'] },
+        { name: 'Texto', extensions: ['txt'] }
+      ]
+    })
+    if (chosen.canceled || !chosen.filePath) {
+      return { saved: false, path: null as string | null, lineCount: 0 }
+    }
+    writeFileSync(chosen.filePath, result.content, { encoding: 'latin1' })
+    logAudit({
+      action: 'export',
+      entity: 'bpa_file',
+      details: { path: chosen.filePath, lineCount: result.lineCount, year, month }
+    })
+    return { saved: true, path: chosen.filePath, lineCount: result.lineCount }
+  })
 
   // ============================================================
   //   PONTO ELETRÔNICO
