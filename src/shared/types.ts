@@ -223,6 +223,12 @@ export interface Requisition {
   observations: string | null
   status: RequisitionStatus
   issuedAt: string
+  /** Laudo textual (preenchido após o exame ser realizado). */
+  resultText: string | null
+  /** Caminho do arquivo anexado (PDF/imagem) — relativo a userData/exams/. */
+  resultFilePath: string | null
+  resultCompletedAt: string | null
+  resultByProfessionalId: number | null
   createdByUserId: number | null
   createdAt: string
 }
@@ -1774,5 +1780,60 @@ export const SINAN_COMMON_AGRAVOS: Array<{ cid: string; name: string }> = [
   { cid: 'G03', name: 'Meningite' },
   { cid: 'U07.1', name: 'COVID-19' }
 ]
+
+// ════════════════════════════════════════════════════════════════════
+//   Sala de Medicação (ambulatorial)
+// ════════════════════════════════════════════════════════════════════
+
+export interface MedicationApplication {
+  id: number
+  patientId: number
+  professionalId: number | null
+  medicationId: number | null
+  medicationName: string
+  dose: string
+  route: string | null
+  lotId: number | null
+  appliedAt: string
+  notes: string | null
+  stockMovementId: number | null
+  createdByUserId: number | null
+  createdAt: string
+}
+
+export interface MedicationApplicationWithRefs extends MedicationApplication {
+  patientName: string
+  patientCpf: string | null
+  professionalName: string | null
+  lotNumber: string | null
+}
+
+export interface MedicationApplicationInput {
+  patientId: number
+  professionalId?: number | null
+  medicationId?: number | null
+  medicationName: string
+  dose: string
+  route?: string | null
+  lotId?: number | null
+  appliedAt?: string
+  notes?: string | null
+  /** Quando true e medicationId+lotId presentes, gera movimento de saída
+   *  no estoque automaticamente (quantidade = 1). */
+  decrementStock?: boolean
+}
+
+// ════════════════════════════════════════════════════════════════════
+//   Laudo de exames / requisições
+// ════════════════════════════════════════════════════════════════════
+
+export interface RequisitionResultInput {
+  requisitionId: number
+  resultText: string | null
+  resultByProfessionalId?: number | null
+  /** ArrayBuffer + filename quando anexar arquivo (PDF/imagem). */
+  fileName?: string | null
+  fileBytes?: ArrayBuffer | Uint8Array | null
+}
 
 export type IpcResult<T> = { ok: true; data: T } | { ok: false; error: AppError }

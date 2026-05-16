@@ -19,6 +19,10 @@ interface Row {
   observations: string | null
   status: RequisitionStatus
   issued_at: string
+  result_text: string | null
+  result_file_path: string | null
+  result_completed_at: string | null
+  result_by_professional_id: number | null
   created_by_user_id: number | null
   created_at: string
 }
@@ -57,6 +61,10 @@ function mapRow(row: Row): Requisition {
     observations: row.observations,
     status: row.status,
     issuedAt: row.issued_at,
+    resultText: row.result_text,
+    resultFilePath: row.result_file_path,
+    resultCompletedAt: row.result_completed_at,
+    resultByProfessionalId: row.result_by_professional_id,
     createdByUserId: row.created_by_user_id,
     createdAt: row.created_at
   }
@@ -185,4 +193,44 @@ export function deleteRequisition(id: number): void {
   if (result.changes > 0) {
     logAudit({ action: 'delete', entity: 'requisition', entityId: id })
   }
+}
+
+/**
+ * Anexa o laudo (texto + opcionalmente arquivo) à requisição. Marca a
+ * requisição como 'realizada'. Caminho de arquivo é gravado relativo a
+ * userData/exams/; quem chama é responsável por salvar o blob no disco.
+ */
+export function attachResult(input: {
+  requisitionId: number
+  resultText: string | null
+  resultFilePath: string | null
+  resultByProfessionalId: number | null
+}): RequisitionWithRefs {
+  const db = getDb()
+  const existing = db.prepare('SELECT id FROM requisitions WHERE id = ?').get(input.requisitionId)
+  if (!existing) {
+    throw Object.assign(new Error('Requisição não encontrada.'), { code: 'REQUISITION_NOT_FOUND' })
+  }
+  db.prepare(
+    `UPDATE requisitions
+        SET result_text = ?,
+            result_file_path = COALESCE(?, result_file_path),
+            result_completed_at = datetime('now'),
+            result_by_professional_id = ?,
+            status = 'realizada'
+      WHERE id = ?`
+  ).run(
+    input.resultText?.trim() || null,
+    input.resultFilePath,
+    input.resultByProfessionalId,
+    input.requisitionId
+  )
+  logAudit({
+    action: 'update',
+    entity: 'requisition_result',
+    entityId: input.requisitionId
+  })
+  const row = getById(input.requisitionId)
+  if (!row) throw new Error('Requisição não encontrada após gravar laudo.')
+  return row
 }

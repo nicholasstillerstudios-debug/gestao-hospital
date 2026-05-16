@@ -13,6 +13,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { PageHeader } from '@renderer/components/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
 import { Field, Input, Select } from '@renderer/components/ui/Field'
+import { Modal } from '@renderer/components/ui/Modal'
 import { RequisitionModal } from '@renderer/components/RequisitionModal'
 import { formatDateTimeBr } from '@renderer/lib/utils'
 import {
@@ -45,6 +46,7 @@ export function ExamesPage(): React.JSX.Element {
   const [statusFilter, setStatusFilter] = useState<'all' | RequisitionStatus>('all')
   const [loading, setLoading] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
+  const [resultFor, setResultFor] = useState<RequisitionWithRefs | null>(null)
   const [professionals, setProfessionals] = useState<Professional[]>([])
   const [professionalId, setProfessionalId] = useState<number | null>(null)
 
@@ -247,15 +249,33 @@ export function ExamesPage(): React.JSX.Element {
                       </span>
                     </td>
                     <td className="px-3 py-2 text-right">
-                      {r.status === 'solicitada' ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => void markStatus(r.id, 'realizada')}
-                        >
-                          Marcar realizada
+                      <div className="inline-flex gap-1">
+                        {r.resultFilePath ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              void window.api.requisitions
+                                .openResultFile(r.id)
+                                .catch((err) => alert((err as Error).message))
+                            }
+                          >
+                            Ver anexo
+                          </Button>
+                        ) : null}
+                        <Button variant="outline" size="sm" onClick={() => setResultFor(r)}>
+                          {r.resultCompletedAt ? 'Editar laudo' : 'Lançar laudo'}
                         </Button>
-                      ) : null}
+                        {r.status === 'solicitada' ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => void markStatus(r.id, 'realizada')}
+                          >
+                            Marcar realizada
+                          </Button>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -278,6 +298,112 @@ export function ExamesPage(): React.JSX.Element {
           }}
         />
       ) : null}
+
+      {resultFor ? (
+        <RequisitionResultModal
+          requisition={resultFor}
+          onClose={() => setResultFor(null)}
+          onSaved={() => {
+            const pid = selectedPatient?.id
+            setResultFor(null)
+            if (pid) void load(pid)
+          }}
+        />
+      ) : null}
     </div>
+  )
+}
+
+function RequisitionResultModal({
+  requisition,
+  onClose,
+  onSaved
+}: {
+  requisition: RequisitionWithRefs
+  onClose: () => void
+  onSaved: () => void
+}): React.JSX.Element {
+  const [text, setText] = useState(requisition.resultText ?? '')
+  const [file, setFile] = useState<File | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const submit = async (): Promise<void> => {
+    setError(null)
+    setSaving(true)
+    try {
+      let fileBytes: ArrayBuffer | null = null
+      let fileName: string | null = null
+      if (file) {
+        fileBytes = await file.arrayBuffer()
+        fileName = file.name
+      }
+      await window.api.requisitions.attachResult({
+        requisitionId: requisition.id,
+        resultText: text.trim() || null,
+        resultByProfessionalId: requisition.professional.id,
+        fileBytes,
+        fileName
+      })
+      onSaved()
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={`Laudo · ${requisition.patient.fullName}`}
+      size="lg"
+    >
+      {error ? (
+        <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+          {error}
+        </div>
+      ) : null}
+      <div className="space-y-3">
+        <div className="text-xs text-slate-500">
+          Tipo: {requisition.type} · Itens: {requisition.items.join(', ')}
+        </div>
+        <label className="block text-sm">
+          <span className="mb-1 block font-medium text-slate-700">Texto do laudo</span>
+          <textarea
+            rows={6}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            placeholder="Descrição do achado, conclusão, recomendações…"
+          />
+        </label>
+        <label className="block text-sm">
+          <span className="mb-1 block font-medium text-slate-700">
+            Anexar arquivo (PDF / imagem) — opcional
+          </span>
+          <input
+            type="file"
+            accept=".pdf,image/png,image/jpeg,image/webp,image/tiff,image/bmp,application/dicom"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            className="block w-full text-sm"
+          />
+          {requisition.resultFilePath ? (
+            <div className="mt-1 text-xs text-slate-500">
+              Arquivo existente: {requisition.resultFilePath}. Selecionar outro substitui.
+            </div>
+          ) : null}
+        </label>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button onClick={() => void submit()} disabled={saving}>
+            {saving ? 'Salvando…' : 'Salvar laudo'}
+          </Button>
+        </div>
+      </div>
+    </Modal>
   )
 }

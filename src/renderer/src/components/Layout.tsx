@@ -425,6 +425,12 @@ const GROUPS: NavGroup[] = [
         roles: ['admin', 'medico']
       },
       {
+        to: '/medicacao',
+        label: 'Sala de medicação',
+        icon: Icon.pill,
+        roles: ['admin', 'medico', 'enfermagem']
+      },
+      {
         to: '/internacoes',
         label: 'Internações',
         icon: Icon.clipboard,

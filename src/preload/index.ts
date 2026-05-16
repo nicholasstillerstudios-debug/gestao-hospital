@@ -93,7 +93,9 @@ import type {
   IsolationInput,
   IrasIndicators,
   SinanNotificationInput,
-  SinanNotificationWithRefs
+  SinanNotificationWithRefs,
+  MedicationApplicationInput,
+  MedicationApplicationWithRefs
 } from '@shared/types'
 
 interface PublicUnitSettings {
@@ -254,7 +256,27 @@ const api = {
     get: (id: number): Promise<RequisitionWithRefs | null> => invoke(IPC.requisitions.get, id),
     updateStatus: (id: number, status: RequisitionStatus): Promise<Requisition | null> =>
       invoke(IPC.requisitions.updateStatus, id, status),
-    delete: (id: number): Promise<null> => invoke(IPC.requisitions.delete, id)
+    delete: (id: number): Promise<null> => invoke(IPC.requisitions.delete, id),
+    attachResult: (input: {
+      requisitionId: number
+      resultText: string | null
+      resultByProfessionalId?: number | null
+      fileName?: string | null
+      fileBytes?: ArrayBuffer | null
+    }): Promise<RequisitionWithRefs> => invoke(IPC.requisitions.attachResult, input),
+    openResultFile: (requisitionId: number): Promise<{ path: string }> =>
+      invoke(IPC.requisitions.openResultFile, requisitionId)
+  },
+  medicationApplications: {
+    list: (filter?: {
+      fromDate?: string
+      toDate?: string
+      patientId?: number
+    }): Promise<MedicationApplicationWithRefs[]> =>
+      invoke(IPC.medicationApplications.list, filter ?? {}),
+    create: (input: MedicationApplicationInput): Promise<MedicationApplicationWithRefs> =>
+      invoke(IPC.medicationApplications.create, input),
+    delete: (id: number): Promise<null> => invoke(IPC.medicationApplications.delete, id)
   },
   calls: {
     create: (input: PatientCallInput): Promise<PatientCall> => invoke(IPC.calls.create, input),

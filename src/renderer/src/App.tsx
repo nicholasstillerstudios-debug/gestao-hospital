@@ -29,6 +29,7 @@ import { TriagePage } from './pages/Triage'
 import { CallPanelPage } from './pages/CallPanel'
 import { BPAPage } from './pages/BPA'
 import { SinanPage } from './pages/Sinan'
+import { MedicationApplicationsPage } from './pages/MedicationApplications'
 import { ExamesPage } from './pages/Exames'
 import {
   PrintAIHPage,
@@ -312,6 +313,14 @@ function App(): React.JSX.Element {
           element={
             <ProtectedRoute roles={['admin', 'medico', 'enfermagem']}>
               <SinanPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/medicacao"
+          element={
+            <ProtectedRoute roles={['admin', 'medico', 'enfermagem']}>
+              <MedicationApplicationsPage />
             </ProtectedRoute>
           }
         />

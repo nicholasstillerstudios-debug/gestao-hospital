@@ -92,7 +92,14 @@ export const IPC = {
     listForPatient: 'requisitions:list-for-patient',
     get: 'requisitions:get',
     updateStatus: 'requisitions:update-status',
-    delete: 'requisitions:delete'
+    delete: 'requisitions:delete',
+    attachResult: 'requisitions:attach-result',
+    openResultFile: 'requisitions:open-result-file'
+  },
+  medicationApplications: {
+    list: 'medapp:list',
+    create: 'medapp:create',
+    delete: 'medapp:delete'
   },
   calls: {
     create: 'calls:create',

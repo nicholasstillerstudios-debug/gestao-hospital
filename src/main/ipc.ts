@@ -1,4 +1,4 @@
-import { ipcMain, app, dialog, BrowserWindow } from 'electron'
+import { ipcMain, app, dialog, BrowserWindow, shell } from 'electron'
 import { writeFileSync } from 'fs'
 import { IPC } from '@shared/ipc'
 import { getCurrentUser, requireRole, requireUser, setCurrentUser } from './session'
@@ -1119,6 +1119,75 @@ export function registerIpcHandlers(): void {
   registerHandler(IPC.requisitions.delete, (id: unknown) => {
     requireRole('admin', 'medico')
     requisitionsRepo.deleteRequisition(Number(id))
+    return null
+  })
+  registerHandler(IPC.requisitions.attachResult, async (input: unknown) => {
+    requireRole('admin', 'medico', 'enfermagem')
+    const i = input as {
+      requisitionId: number
+      resultText: string | null
+      resultByProfessionalId?: number | null
+      fileName?: string | null
+      fileBytes?: ArrayBuffer | Uint8Array | null
+    }
+    let filePath: string | null = null
+    if (i.fileBytes && i.fileName) {
+      const fs = await import('node:fs')
+      const path = await import('node:path')
+      const dir = path.join(app.getPath('userData'), 'exams')
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true, mode: 0o700 })
+      const ext = path.extname(i.fileName).toLowerCase() || '.bin'
+      const safe = `REQ-${i.requisitionId}-${Date.now()}${ext}`
+      const full = path.join(dir, safe)
+      const buf = Buffer.from(i.fileBytes as ArrayBuffer)
+      if (buf.byteLength > 20 * 1024 * 1024) {
+        throw Object.assign(new Error('Arquivo maior que 20 MB não é permitido.'), {
+          code: 'FILE_TOO_LARGE'
+        })
+      }
+      fs.writeFileSync(full, buf)
+      filePath = safe
+    }
+    return requisitionsRepo.attachResult({
+      requisitionId: i.requisitionId,
+      resultText: i.resultText,
+      resultFilePath: filePath,
+      resultByProfessionalId: i.resultByProfessionalId ?? null
+    })
+  })
+  registerHandler(IPC.requisitions.openResultFile, async (requisitionId: unknown) => {
+    requireUser()
+    const r = requisitionsRepo.getById(Number(requisitionId))
+    if (!r || !r.resultFilePath) {
+      throw Object.assign(new Error('Esta requisição não tem arquivo anexado.'), {
+        code: 'NO_FILE'
+      })
+    }
+    const path = await import('node:path')
+    const full = path.join(app.getPath('userData'), 'exams', r.resultFilePath)
+    await shell.openPath(full)
+    return { path: full }
+  })
+
+  // ============================================================
+  //   Sala de medicação ambulatorial
+  // ============================================================
+  registerHandler(IPC.medicationApplications.list, async (filter: unknown) => {
+    requireUser()
+    const mod = await import('./repositories/medicationApplications')
+    return mod.listApplications(
+      (filter as { fromDate?: string; toDate?: string; patientId?: number }) ?? undefined
+    )
+  })
+  registerHandler(IPC.medicationApplications.create, async (input: unknown) => {
+    requireRole('admin', 'medico', 'enfermagem')
+    const mod = await import('./repositories/medicationApplications')
+    return mod.createApplication(input as Parameters<typeof mod.createApplication>[0])
+  })
+  registerHandler(IPC.medicationApplications.delete, async (id: unknown) => {
+    requireRole('admin', 'medico', 'enfermagem')
+    const mod = await import('./repositories/medicationApplications')
+    mod.deleteApplication(Number(id))
     return null
   })
 

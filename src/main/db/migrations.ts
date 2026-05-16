@@ -1121,6 +1121,40 @@ const MIGRATIONS: Migration[] = [
       -- do estabelecimento (settings.unitIbge).
       ALTER TABLE patients ADD COLUMN address_ibge TEXT;
     `
+  },
+  {
+    id: 23,
+    name: 'medication_applications_and_results',
+    sql: `
+      -- Sala de medicação: aplicação ambulatorial de medicamentos
+      -- (vacinas, dipirona, antibióticos injetáveis) sem necessidade de
+      -- internação. Opcionalmente abate lote da farmácia.
+      CREATE TABLE IF NOT EXISTS medication_applications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id INTEGER NOT NULL REFERENCES patients(id) ON DELETE RESTRICT,
+        professional_id INTEGER REFERENCES professionals(id) ON DELETE SET NULL,
+        medication_id INTEGER REFERENCES medications(id) ON DELETE SET NULL,
+        medication_name TEXT NOT NULL,
+        dose TEXT NOT NULL,
+        route TEXT,
+        lot_id INTEGER REFERENCES medication_lots(id) ON DELETE SET NULL,
+        applied_at TEXT NOT NULL DEFAULT (datetime('now')),
+        notes TEXT,
+        stock_movement_id INTEGER REFERENCES stock_movements(id) ON DELETE SET NULL,
+        created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_medapp_patient ON medication_applications(patient_id);
+      CREATE INDEX IF NOT EXISTS idx_medapp_applied ON medication_applications(applied_at);
+
+      -- Laudo / resultado dos exames (requisições de imagem, laboratoriais
+      -- etc). Texto livre + caminho de arquivo anexado em userData/exams/.
+      ALTER TABLE requisitions ADD COLUMN result_text TEXT;
+      ALTER TABLE requisitions ADD COLUMN result_file_path TEXT;
+      ALTER TABLE requisitions ADD COLUMN result_completed_at TEXT;
+      ALTER TABLE requisitions ADD COLUMN result_by_professional_id INTEGER
+        REFERENCES professionals(id) ON DELETE SET NULL;
+    `
   }
 ]
 
