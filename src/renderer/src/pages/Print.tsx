@@ -593,7 +593,7 @@ export function PrintHeader({
   const hasAnyLogo = logos.prefeitura || logos.secretaria || logos.hospital
   const prefeituraText = unit.brandingPrefeituraName || 'PREFEITURA MUNICIPAL'
   const secretariaText = unit.brandingSecretariaName || 'SECRETARIA MUNICIPAL DE SAÚDE'
-  const unidadeText = hasUnit ? unit.unitName : 'UNIDADE BÁSICA DE SAÚDE'
+  const unidadeText = hasUnit ? unit.unitName : 'ESTABELECIMENTO DE SAÚDE'
   const logoStyle = { height: `${layout.logoHeight}px`, width: 'auto' } as const
   const alignStyle: React.CSSProperties = {
     textAlign: layout.align,
@@ -649,11 +649,11 @@ export function PrintHeader({
               {hasUnit ? (
                 <>
                   {unit.unitCnes ? <>CNES {unit.unitCnes} · </> : null}
-                  {unit.unitAddress || 'Unidade Básica de Saúde (UBS)'}
+                  {unit.unitAddress || 'Estabelecimento de Saúde'}
                   {unit.unitPhone ? <> · Tel. {unit.unitPhone}</> : null}
                 </>
               ) : (
-                'Unidade Básica de Saúde (UBS)'
+                'Estabelecimento de Saúde'
               )}
             </div>
           ) : null}

@@ -21,12 +21,12 @@ const DEMO_PATIENTS: Array<{
     cns: '123456789012340',
     birth_date: '1985-04-12',
     sex: 'F',
-    phone: '(11) 98877-1122',
+    phone: '(71) 98877-1122',
     mother_name: 'Maria das Graças Ribeiro',
     address_street: 'Rua das Flores, 123',
     address_neighborhood: 'Centro',
-    address_city: 'São Paulo',
-    address_state: 'SP'
+    address_city: 'Salvador',
+    address_state: 'BA'
   },
   {
     full_name: 'João Carlos da Silva',
@@ -34,12 +34,12 @@ const DEMO_PATIENTS: Array<{
     cns: '234567890123401',
     birth_date: '1972-09-28',
     sex: 'M',
-    phone: '(11) 97766-3344',
+    phone: '(71) 97766-3344',
     mother_name: 'Rosa da Silva',
     address_street: 'Av. Brasil, 456',
     address_neighborhood: 'Jardim América',
-    address_city: 'São Paulo',
-    address_state: 'SP'
+    address_city: 'Salvador',
+    address_state: 'BA'
   },
   {
     full_name: 'Beatriz Nogueira Alves',
@@ -47,12 +47,12 @@ const DEMO_PATIENTS: Array<{
     cns: '345678901234012',
     birth_date: '1998-02-05',
     sex: 'F',
-    phone: '(11) 96655-5566',
+    phone: '(71) 96655-5566',
     mother_name: 'Helena Alves',
     address_street: 'Rua XV de Novembro, 789',
     address_neighborhood: 'Vila Nova',
-    address_city: 'São Paulo',
-    address_state: 'SP'
+    address_city: 'Salvador',
+    address_state: 'BA'
   },
   {
     full_name: 'Carlos Eduardo Pereira',
@@ -60,12 +60,12 @@ const DEMO_PATIENTS: Array<{
     cns: '456789012340123',
     birth_date: '1960-11-30',
     sex: 'M',
-    phone: '(11) 95544-7788',
+    phone: '(71) 95544-7788',
     mother_name: 'Lúcia Pereira',
     address_street: 'Rua do Comércio, 321',
     address_neighborhood: 'Santa Cecília',
-    address_city: 'São Paulo',
-    address_state: 'SP'
+    address_city: 'Salvador',
+    address_state: 'BA'
   },
   {
     full_name: 'Daniela Fernandes Oliveira',
@@ -73,12 +73,12 @@ const DEMO_PATIENTS: Array<{
     cns: '567890123401234',
     birth_date: '1990-07-14',
     sex: 'F',
-    phone: '(11) 94433-9900',
+    phone: '(71) 94433-9900',
     mother_name: 'Marlene Oliveira',
     address_street: 'Rua dos Pinheiros, 654',
     address_neighborhood: 'Pinheiros',
-    address_city: 'São Paulo',
-    address_state: 'SP'
+    address_city: 'Salvador',
+    address_state: 'BA'
   },
   {
     full_name: 'Eduardo Santos Rocha',
@@ -86,12 +86,12 @@ const DEMO_PATIENTS: Array<{
     cns: '678901234012345',
     birth_date: '1978-03-22',
     sex: 'M',
-    phone: '(11) 93322-1010',
+    phone: '(71) 93322-1010',
     mother_name: 'Teresa Rocha',
     address_street: 'Av. Paulista, 987',
     address_neighborhood: 'Bela Vista',
-    address_city: 'São Paulo',
-    address_state: 'SP'
+    address_city: 'Salvador',
+    address_state: 'BA'
   }
 ]
 
@@ -104,19 +104,19 @@ const DEMO_PROFESSIONALS: Array<{
   {
     full_name: 'Dra. Ana Souza',
     council_type: 'CRM',
-    council_number: '123456-SP',
+    council_number: '123456-BA',
     specialty: 'Clínica Geral'
   },
   {
     full_name: 'Dr. Bruno Costa',
     council_type: 'CRM',
-    council_number: '654321-SP',
+    council_number: '654321-BA',
     specialty: 'Pediatria'
   },
   {
     full_name: 'Enf. Carla Lima',
     council_type: 'COREN',
-    council_number: '222333-SP',
+    council_number: '222333-BA',
     specialty: 'Enfermagem'
   }
 ]

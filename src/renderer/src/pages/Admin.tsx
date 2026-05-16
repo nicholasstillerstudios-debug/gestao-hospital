@@ -1283,7 +1283,7 @@ function UnitTab(): React.JSX.Element {
           <Input
             value={unitMunicipality}
             onChange={(e) => setUnitMunicipality(e.target.value)}
-            placeholder="Ex.: São Paulo - SP"
+            placeholder="Ex.: Salvador - BA"
           />
         </Field>
         <Field

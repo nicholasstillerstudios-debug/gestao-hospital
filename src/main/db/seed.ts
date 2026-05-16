@@ -34,7 +34,7 @@ export function seedSampleProfessionals(db: Database.Database): void {
     'Médico clínico (atenção básica)',
     'CRM',
     '123456',
-    'SP',
+    'BA',
     'Clínica Geral'
   )
   insert.run(
@@ -44,7 +44,7 @@ export function seedSampleProfessionals(db: Database.Database): void {
     'Médico pediatra',
     'CRM',
     '654321',
-    'SP',
+    'BA',
     'Pediatria'
   )
   insert.run(
@@ -54,7 +54,7 @@ export function seedSampleProfessionals(db: Database.Database): void {
     'Enfermeiro',
     'COREN',
     '222333',
-    'SP',
+    'BA',
     'Saúde da Família'
   )
   insert.run(
@@ -64,7 +64,7 @@ export function seedSampleProfessionals(db: Database.Database): void {
     'Cirurgião-dentista — clínico geral',
     'CRO',
     '88001',
-    'SP',
+    'BA',
     'Odontologia clínica'
   )
 }
