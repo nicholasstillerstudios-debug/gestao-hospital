@@ -23,6 +23,7 @@ const EMPTY: PatientInput = {
   addressCity: '',
   addressState: '',
   addressZip: '',
+  addressIbge: '',
   notes: ''
 }
 
@@ -63,6 +64,7 @@ export function PatientFormPage(): React.JSX.Element {
           addressCity: rest.addressCity ?? '',
           addressState: rest.addressState ?? '',
           addressZip: rest.addressZip ?? '',
+          addressIbge: rest.addressIbge ?? '',
           notes: rest.notes ?? ''
         })
       } catch (err) {
@@ -249,6 +251,19 @@ export function PatientFormPage(): React.JSX.Element {
               <Input
                 value={form.addressZip ?? ''}
                 onChange={(e) => update('addressZip', e.target.value.replace(/\D/g, ''))}
+              />
+            </Field>
+            <Field
+              className="md:col-span-2"
+              label="Código IBGE do município"
+              hint="6 dígitos — usado em BPA/SUS"
+            >
+              <Input
+                value={form.addressIbge ?? ''}
+                onChange={(e) =>
+                  update('addressIbge', e.target.value.replace(/\D/g, '').slice(0, 6))
+                }
+                placeholder="ex.: 292740 (Salvador-BA)"
               />
             </Field>
           </div>

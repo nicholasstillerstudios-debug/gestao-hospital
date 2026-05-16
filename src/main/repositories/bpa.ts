@@ -45,6 +45,7 @@ interface RecRowWithRefs extends RecRow {
   patient_sex: string | null
   patient_birth_date: string | null
   patient_municipality: string | null
+  patient_ibge: string | null
   professional_name: string | null
   professional_cns: string | null
   professional_cbo_code: string | null
@@ -81,6 +82,7 @@ function toRecWithRefs(r: RecRowWithRefs): BpaRecordWithRefs {
       : null,
     patientBirthDate: r.patient_birth_date,
     patientMunicipality: r.patient_municipality,
+    patientIbge: r.patient_ibge,
     professionalName: r.professional_name,
     professionalCns: r.professional_cns,
     professionalCboCode: r.professional_cbo_code
@@ -95,6 +97,7 @@ const SELECT_REC = `
          p.sex            AS patient_sex,
          p.birth_date     AS patient_birth_date,
          p.address_city   AS patient_municipality,
+         p.address_ibge   AS patient_ibge,
          pr.full_name     AS professional_name,
          pr.cns           AS professional_cns,
          pr.cbo_code      AS professional_cbo_code

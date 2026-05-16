@@ -1111,6 +1111,16 @@ const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_sinan_agravo ON sinan_notifications(agravo_cid);
       CREATE INDEX IF NOT EXISTS idx_sinan_date ON sinan_notifications(notificado_em);
     `
+  },
+  {
+    id: 22,
+    name: 'patients_ibge',
+    sql: `
+      -- Código IBGE do município de residência do paciente. Usado no BPA-I
+      -- e nos demais formulários SUS. Quando vazio, sistema cai no IBGE
+      -- do estabelecimento (settings.unitIbge).
+      ALTER TABLE patients ADD COLUMN address_ibge TEXT;
+    `
   }
 ]
 

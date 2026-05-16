@@ -89,6 +89,8 @@ export interface Patient {
   addressCity: string | null
   addressState: string | null
   addressZip: string | null
+  /** Código IBGE do município do paciente (6 dígitos) — para BPA/SUS. */
+  addressIbge: string | null
   notes: string | null
   anonymizedAt: string | null
   createdAt: string
@@ -344,6 +346,7 @@ export interface BpaRecordWithRefs extends BpaRecord {
   patientSex: Sex | null
   patientBirthDate: string | null
   patientMunicipality: string | null
+  patientIbge: string | null
   professionalName: string | null
   professionalCns: string | null
   professionalCboCode: string | null

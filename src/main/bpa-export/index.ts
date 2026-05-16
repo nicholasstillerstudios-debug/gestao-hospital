@@ -8,8 +8,8 @@
  * Limitações conhecidas desta implementação:
  *  - Caráter de atendimento fixo "01" (eletivo) — não há ainda campo no
  *    bpa_records para distinguir urgência/acidente.
- *  - IBGE do paciente cai pro IBGE do estabelecimento (settings.unitIbge)
- *    porque o cadastro de pacientes só guarda município em string livre.
+ *  - IBGE do paciente: usa Patient.addressIbge; cai para settings.unitIbge
+ *    quando o paciente não tem código IBGE cadastrado.
  *  - Endereço/CEP do paciente preenchidos quando existirem, senão zeros.
  *  - Caso o município devolva o arquivo com erro de validação, ajustes
  *    finos costumam ser bem específicos do programa SIA usado.
@@ -135,7 +135,7 @@ function buildBpaILine(r: BpaRecordWithRefs, ctx: LineCtx): string {
     padL0(r.procedureCode, 10) +
     padL0(r.patientCns ?? '', 15) +
     sexo +
-    padL0(ctx.defaultIbge, 6) +
+    padL0(r.patientIbge || ctx.defaultIbge, 6) +
     padR((r.cid10 ?? '').replace('.', ''), 4) +
     padL0(ageYears(r.patientBirthDate), 3) +
     padL0(r.quantity, 6) +

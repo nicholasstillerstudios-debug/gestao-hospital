@@ -36,6 +36,7 @@ interface Row {
   address_city: string | null
   address_state: string | null
   address_zip: string | null
+  address_ibge: string | null
   notes: string | null
   anonymized_at: string | null
   created_at: string
@@ -61,6 +62,7 @@ function toModel(row: Row): Patient {
     addressCity: row.address_city,
     addressState: row.address_state,
     addressZip: row.address_zip,
+    addressIbge: row.address_ibge,
     notes: row.notes,
     anonymizedAt: row.anonymized_at,
     createdAt: row.created_at,
@@ -112,8 +114,8 @@ export function createPatient(input: PatientInput): Patient {
       `INSERT INTO patients (
         full_name, cpf, cns, birth_date, sex, phone, email, mother_name, race,
         address_street, address_number, address_complement, address_neighborhood,
-        address_city, address_state, address_zip, notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        address_city, address_state, address_zip, address_ibge, notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
       input.fullName.trim(),
@@ -132,6 +134,7 @@ export function createPatient(input: PatientInput): Patient {
       normalize(input.addressCity),
       normalize(input.addressState),
       normalize(input.addressZip),
+      normalize(input.addressIbge),
       normalize(input.notes)
     )
   const row = db.prepare('SELECT * FROM patients WHERE id = ?').get(result.lastInsertRowid) as Row
@@ -153,7 +156,7 @@ export function updatePatient(id: number, input: PatientInput): Patient {
        phone = ?, email = ?, mother_name = ?, race = ?,
        address_street = ?, address_number = ?, address_complement = ?,
        address_neighborhood = ?, address_city = ?, address_state = ?, address_zip = ?,
-       notes = ?, updated_at = datetime('now')
+       address_ibge = ?, notes = ?, updated_at = datetime('now')
      WHERE id = ?`
   ).run(
     input.fullName.trim(),
@@ -172,6 +175,7 @@ export function updatePatient(id: number, input: PatientInput): Patient {
     normalize(input.addressCity),
     normalize(input.addressState),
     normalize(input.addressZip),
+    normalize(input.addressIbge),
     normalize(input.notes),
     id
   )
@@ -268,6 +272,7 @@ export function anonymizePatient(id: number): AnonymizeResult {
          address_city = NULL,
          address_state = NULL,
          address_zip = NULL,
+         address_ibge = NULL,
          notes = NULL,
          anonymized_at = datetime('now'),
          updated_at = datetime('now')
