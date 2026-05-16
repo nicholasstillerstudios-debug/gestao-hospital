@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { PageHeader } from '@renderer/components/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
 import { Modal } from '@renderer/components/ui/Modal'
+import { Field, Input, Textarea } from '@renderer/components/ui/Field'
 import { TransferAdmissionForm } from '@renderer/components/hospital/TransferAdmissionForm'
 import { DischargeAdmissionForm } from '@renderer/components/hospital/DischargeAdmissionForm'
 import { EvolutionForm } from '@renderer/components/hospital/EvolutionForm'
@@ -47,6 +48,7 @@ export function AdmissionRecordPage(): React.JSX.Element {
   const [tab, setTab] = useState<Tab>('identificacao')
   const [showTransfer, setShowTransfer] = useState(false)
   const [showDischarge, setShowDischarge] = useState(false)
+  const [showAih, setShowAih] = useState(false)
   const [evolutions, setEvolutions] = useState<AdmissionEvolutionWithRefs[]>([])
   const [vitals, setVitals] = useState<AdmissionVitalSignsWithRefs[]>([])
   const [showEvolutionForm, setShowEvolutionForm] = useState(false)
@@ -143,6 +145,9 @@ export function AdmissionRecordPage(): React.JSX.Element {
             <Link to="/internacoes">
               <Button variant="outline">Voltar</Button>
             </Link>
+            <Button variant="outline" onClick={() => setShowAih(true)}>
+              Editar AIH
+            </Button>
             <Link to={`/imprimir/aih/${admission.id}`}>
               <Button variant="outline">Imprimir AIH</Button>
             </Link>
@@ -364,6 +369,16 @@ export function AdmissionRecordPage(): React.JSX.Element {
           }}
         />
       </Modal>
+
+      <AihEditorModal
+        open={showAih}
+        admission={admission}
+        onClose={() => setShowAih(false)}
+        onSaved={() => {
+          setShowAih(false)
+          void load()
+        }}
+      />
 
       <Modal
         open={showEvolutionForm}
@@ -1286,5 +1301,94 @@ function MarStatusBadge({ status }: { status: MarStatus }): React.JSX.Element {
     >
       {MAR_STATUS_LABELS[status]}
     </span>
+  )
+}
+
+function AihEditorModal({
+  open,
+  admission,
+  onClose,
+  onSaved
+}: {
+  open: boolean
+  admission: AdmissionWithRefs
+  onClose: () => void
+  onSaved: () => void
+}): React.JSX.Element {
+  const [aihNumber, setAihNumber] = useState(admission.aihNumber ?? '')
+  const [proc, setProc] = useState(admission.aihMainProcedureCode ?? '')
+  const [justification, setJustification] = useState(admission.aihJustification ?? '')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (open) {
+      setAihNumber(admission.aihNumber ?? '')
+      setProc(admission.aihMainProcedureCode ?? '')
+      setJustification(admission.aihJustification ?? '')
+      setError(null)
+    }
+  }, [open, admission])
+
+  const submit = async (): Promise<void> => {
+    setSaving(true)
+    setError(null)
+    try {
+      await window.api.admissions.setAih({
+        admissionId: admission.id,
+        aihNumber: aihNumber.trim() || null,
+        aihMainProcedureCode: proc.trim() || null,
+        aihJustification: justification.trim() || null
+      })
+      onSaved()
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title="Dados da AIH" size="lg">
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Nº da AIH" hint="13 dígitos — emitido pelo gestor">
+            <Input
+              value={aihNumber}
+              onChange={(e) => setAihNumber(e.target.value.replace(/\D/g, '').slice(0, 13))}
+              placeholder="0000000000000"
+            />
+          </Field>
+          <Field label="Procedimento principal (SIGTAP)">
+            <Input
+              value={proc}
+              onChange={(e) => setProc(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              placeholder="0000000000"
+            />
+          </Field>
+        </div>
+        <Field label="Justificativa clínica">
+          <Textarea
+            rows={4}
+            value={justification}
+            onChange={(e) => setJustification(e.target.value)}
+            placeholder="Descrição do quadro clínico, exames realizados e necessidade da internação."
+          />
+        </Field>
+        {error ? (
+          <div className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700 ring-1 ring-red-200">
+            {error}
+          </div>
+        ) : null}
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" onClick={onClose} disabled={saving}>
+            Cancelar
+          </Button>
+          <Button onClick={() => void submit()} disabled={saving}>
+            {saving ? 'Salvando…' : 'Salvar'}
+          </Button>
+        </div>
+      </div>
+    </Modal>
   )
 }

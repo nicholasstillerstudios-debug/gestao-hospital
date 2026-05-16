@@ -515,6 +515,21 @@ function SurgeryDetailModal({
   const [opmeDescription, setOpmeDescription] = useState('')
   const [opmeQty, setOpmeQty] = useState('1')
   const [opmeLot, setOpmeLot] = useState('')
+  const [description, setDescription] = useState(surgery.description ?? '')
+  const [descSaving, setDescSaving] = useState(false)
+
+  const saveDescription = async (): Promise<void> => {
+    setDescSaving(true)
+    setError(null)
+    try {
+      await window.api.surgery.setDescription(surgery.id, description)
+      onChanged()
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setDescSaving(false)
+    }
+  }
 
   const load = async (): Promise<void> => {
     try {
@@ -634,6 +649,26 @@ function SurgeryDetailModal({
         <div>
           <div className="font-semibold text-slate-700">Anestesia</div>
           <div>{surgery.anesthesiaType ? ANESTHESIA_TYPE_LABELS[surgery.anesthesiaType] : '—'}</div>
+        </div>
+      </div>
+
+      <h3 className="mb-2 text-sm font-semibold text-slate-700">Descrição cirúrgica</h3>
+      <div className="mb-4">
+        <textarea
+          rows={4}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Achados, técnica utilizada, intercorrências, sangramento, contagem de compressas, drenos, etc."
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+        />
+        <div className="mt-2 flex justify-end">
+          <Button
+            variant="outline"
+            onClick={() => void saveDescription()}
+            disabled={descSaving || description === (surgery.description ?? '')}
+          >
+            {descSaving ? 'Salvando…' : 'Salvar descrição'}
+          </Button>
         </div>
       </div>
 
