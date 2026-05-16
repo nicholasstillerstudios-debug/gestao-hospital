@@ -40,7 +40,14 @@ interface RecRow {
 
 interface RecRowWithRefs extends RecRow {
   patient_name: string | null
+  patient_cns: string | null
+  patient_cpf: string | null
+  patient_sex: string | null
+  patient_birth_date: string | null
+  patient_municipality: string | null
   professional_name: string | null
+  professional_cns: string | null
+  professional_cbo_code: string | null
 }
 
 function toRec(r: RecRow): BpaRecord {
@@ -67,14 +74,30 @@ function toRecWithRefs(r: RecRowWithRefs): BpaRecordWithRefs {
   return {
     ...toRec(r),
     patientName: r.patient_name,
-    professionalName: r.professional_name
+    patientCns: r.patient_cns,
+    patientCpf: r.patient_cpf,
+    patientSex: r.patient_sex === 'M' || r.patient_sex === 'F' || r.patient_sex === 'O'
+      ? r.patient_sex
+      : null,
+    patientBirthDate: r.patient_birth_date,
+    patientMunicipality: r.patient_municipality,
+    professionalName: r.professional_name,
+    professionalCns: r.professional_cns,
+    professionalCboCode: r.professional_cbo_code
   }
 }
 
 const SELECT_REC = `
   SELECT r.*,
-         p.full_name AS patient_name,
-         pr.full_name AS professional_name
+         p.full_name      AS patient_name,
+         p.cns            AS patient_cns,
+         p.cpf            AS patient_cpf,
+         p.sex            AS patient_sex,
+         p.birth_date     AS patient_birth_date,
+         p.address_city   AS patient_municipality,
+         pr.full_name     AS professional_name,
+         pr.cns           AS professional_cns,
+         pr.cbo_code      AS professional_cbo_code
     FROM bpa_records r
     LEFT JOIN patients p ON p.id = r.patient_id
     LEFT JOIN professionals pr ON pr.id = r.professional_id

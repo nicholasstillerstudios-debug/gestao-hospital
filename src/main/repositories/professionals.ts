@@ -6,6 +6,7 @@ interface Row {
   id: number
   full_name: string
   cpf: string | null
+  cns: string | null
   category: string | null
   cbo_code: string | null
   cbo_name: string | null
@@ -25,6 +26,7 @@ function toModel(row: Row): Professional {
     id: row.id,
     fullName: row.full_name,
     cpf: row.cpf,
+    cns: row.cns,
     category: row.category,
     cboCode: row.cbo_code,
     cboName: row.cbo_name,
@@ -61,15 +63,16 @@ export function createProfessional(input: ProfessionalInput): Professional {
   const result = db
     .prepare(
       `INSERT INTO professionals (
-         full_name, cpf, category, cbo_code, cbo_name,
+         full_name, cpf, cns, category, cbo_code, cbo_name,
          council_type, council_number, council_uf, council_expires_at,
          specialty, email, phone, active
        )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
       input.fullName,
       input.cpf,
+      input.cns,
       input.category,
       input.cboCode,
       input.cboName,
@@ -93,13 +96,14 @@ export function updateProfessional(id: number, input: ProfessionalInput): Profes
   const db = getDb()
   db.prepare(
     `UPDATE professionals
-        SET full_name = ?, cpf = ?, category = ?, cbo_code = ?, cbo_name = ?,
+        SET full_name = ?, cpf = ?, cns = ?, category = ?, cbo_code = ?, cbo_name = ?,
             council_type = ?, council_number = ?, council_uf = ?, council_expires_at = ?,
             specialty = ?, email = ?, phone = ?
       WHERE id = ?`
   ).run(
     input.fullName,
     input.cpf,
+    input.cns,
     input.category,
     input.cboCode,
     input.cboName,

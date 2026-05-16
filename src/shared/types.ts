@@ -48,6 +48,7 @@ export interface Professional {
   id: number
   fullName: string
   cpf: string | null
+  cns: string | null
   category: string | null
   cboCode: string | null
   cboName: string | null
@@ -338,7 +339,14 @@ export interface BpaRecord {
 
 export interface BpaRecordWithRefs extends BpaRecord {
   patientName: string | null
+  patientCns: string | null
+  patientCpf: string | null
+  patientSex: Sex | null
+  patientBirthDate: string | null
+  patientMunicipality: string | null
   professionalName: string | null
+  professionalCns: string | null
+  professionalCboCode: string | null
 }
 
 export interface BpaRecordInput {

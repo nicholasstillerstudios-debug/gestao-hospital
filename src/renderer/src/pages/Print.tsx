@@ -4,6 +4,7 @@ import { ageFromBirthDate, formatCpf, formatDateBr, formatDateTimeBr } from '@re
 import type {
   AppointmentWithRefs,
   Attendance,
+  BpaRecordWithRefs,
   Patient,
   PrescriptionWithRefs,
   RequisitionWithRefs
@@ -766,4 +767,198 @@ export function PrintModelPage(): React.JSX.Element {
       <PrintSignature professional="________________________________________" subtitle="CRM/COREN" />
     </div>
   )
+}
+
+/**
+ * Folha BPA-Individualizado (SIA-SUS). Renderiza os registros de BPA da
+ * competência (ano+mês) em formato tabular, no padrão do Boletim de
+ * Produção Ambulatorial. Aceita exportar como PDF via PrintToolbar.
+ *
+ * Layout enxuto fiel ao formulário oficial — pode ser arquivado em
+ * papel ou enviado eletronicamente após digitação no sistema do
+ * município. Os campos cobertos: competência, CNES, CNS profissional,
+ * CBO, CNS paciente, sexo, nascimento, município, procedimento SIGTAP,
+ * CID-10, quantidade, data.
+ */
+export function PrintBpaSheetPage(): React.JSX.Element {
+  const params = useParams()
+  const navigate = useNavigate()
+  const year = Number(params.year)
+  const month = Number(params.month)
+  const { unit, logos, layout } = useUnitInfo()
+  const [records, setRecords] = useState<BpaRecordWithRefs[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void window.api.bpa
+      .listRecords({ year, month })
+      .then((r) => !cancelled && setRecords(r))
+      .catch((e) => !cancelled && setError((e as Error).message))
+    return () => {
+      cancelled = true
+    }
+  }, [year, month])
+
+  if (error) {
+    return <PrintError message={error} onClose={() => navigate(-1)} />
+  }
+  if (!records) {
+    return <div className="print-document">Carregando…</div>
+  }
+
+  const ROWS_PER_PAGE = 20
+  const pages: BpaRecordWithRefs[][] = []
+  for (let i = 0; i < Math.max(records.length, 1); i += ROWS_PER_PAGE) {
+    pages.push(records.slice(i, i + ROWS_PER_PAGE))
+  }
+  const competencia = `${String(month).padStart(2, '0')}/${year}`
+  const totalQty = records.reduce((s, r) => s + (r.quantity || 0), 0)
+
+  const fileName = `bpa-i-${year}-${String(month).padStart(2, '0')}`
+
+  return (
+    <div className="print-document">
+      <PrintToolbar
+        onPrint={() => window.print()}
+        onSavePdf={() => void saveAsPdf(fileName)}
+        onClose={() => navigate(-1)}
+      />
+      {pages.map((pageRows, pageIdx) => (
+        <section key={pageIdx} className={pageIdx > 0 ? 'print-page-break' : undefined}>
+          <PrintHeader
+            title="BPA-INDIVIDUALIZADO (BPA-I)"
+            unit={unit}
+            logos={logos}
+            layout={layout}
+          />
+
+          <table
+            style={{
+              width: '100%',
+              fontSize: 11,
+              marginBottom: 8,
+              borderCollapse: 'collapse'
+            }}
+          >
+            <tbody>
+              <tr>
+                <td style={{ border: '1px solid #94a3b8', padding: 4 }}>
+                  <strong>Competência:</strong> {competencia}
+                </td>
+                <td style={{ border: '1px solid #94a3b8', padding: 4 }}>
+                  <strong>CNES:</strong> {unit.unitCnes || '———'}
+                </td>
+                <td style={{ border: '1px solid #94a3b8', padding: 4 }}>
+                  <strong>Município:</strong> {unit.unitMunicipality || '———'}
+                </td>
+                <td style={{ border: '1px solid #94a3b8', padding: 4 }}>
+                  <strong>Folha:</strong> {pageIdx + 1} / {pages.length}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <table
+            style={{
+              width: '100%',
+              fontSize: 9,
+              borderCollapse: 'collapse',
+              tableLayout: 'fixed'
+            }}
+          >
+            <thead>
+              <tr style={{ background: '#e2e8f0' }}>
+                <th style={bpaTh(30)}>Lin</th>
+                <th style={bpaTh(80)}>Data</th>
+                <th style={bpaTh(110)}>CNS Profissional</th>
+                <th style={bpaTh(55)}>CBO</th>
+                <th style={bpaTh(110)}>CNS Paciente</th>
+                <th style={bpaTh(220)}>Nome do paciente</th>
+                <th style={bpaTh(35)}>Sexo</th>
+                <th style={bpaTh(75)}>Nasc.</th>
+                <th style={bpaTh(110)}>Procedimento (SIGTAP)</th>
+                <th style={bpaTh(65)}>CID-10</th>
+                <th style={bpaTh(30)}>Qtd</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pageRows.length === 0 ? (
+                <tr>
+                  <td colSpan={11} style={{ ...bpaTd, textAlign: 'center', padding: 12 }}>
+                    Nenhum procedimento registrado nesta competência.
+                  </td>
+                </tr>
+              ) : (
+                pageRows.map((r, idx) => (
+                  <tr key={r.id}>
+                    <td style={bpaTd}>{pageIdx * ROWS_PER_PAGE + idx + 1}</td>
+                    <td style={bpaTd}>{r.procedureDate.slice(8, 10)}/{r.procedureDate.slice(5, 7)}</td>
+                    <td style={bpaTd}>{r.professionalCns || '———'}</td>
+                    <td style={bpaTd}>{r.professionalCboCode || r.cboCode || '——'}</td>
+                    <td style={bpaTd}>{r.patientCns || '———'}</td>
+                    <td style={{ ...bpaTd, textAlign: 'left' }}>{r.patientName || '———'}</td>
+                    <td style={bpaTd}>{r.patientSex ?? '—'}</td>
+                    <td style={bpaTd}>
+                      {r.patientBirthDate
+                        ? `${r.patientBirthDate.slice(8, 10)}/${r.patientBirthDate.slice(5, 7)}/${r.patientBirthDate.slice(0, 4)}`
+                        : '———'}
+                    </td>
+                    <td style={bpaTd}>{r.procedureCode}</td>
+                    <td style={bpaTd}>{r.cid10 || '——'}</td>
+                    <td style={{ ...bpaTd, textAlign: 'right' }}>{r.quantity}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+            {pageIdx === pages.length - 1 ? (
+              <tfoot>
+                <tr style={{ background: '#f1f5f9', fontWeight: 600 }}>
+                  <td colSpan={10} style={{ ...bpaTd, textAlign: 'right' }}>
+                    Total de procedimentos na competência:
+                  </td>
+                  <td style={{ ...bpaTd, textAlign: 'right' }}>{totalQty}</td>
+                </tr>
+              </tfoot>
+            ) : null}
+          </table>
+
+          <footer
+            style={{
+              marginTop: 24,
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontSize: 10
+            }}
+          >
+            <div>
+              <div>____________________________________</div>
+              <div className="muted">Responsável pelo preenchimento</div>
+            </div>
+            <div>
+              <div>____________________________________</div>
+              <div className="muted">Coordenador / Gestor</div>
+            </div>
+          </footer>
+        </section>
+      ))}
+    </div>
+  )
+}
+
+const bpaTh = (width: number): React.CSSProperties => ({
+  border: '1px solid #94a3b8',
+  padding: '4px 3px',
+  textAlign: 'center',
+  fontWeight: 600,
+  width
+})
+
+const bpaTd: React.CSSProperties = {
+  border: '1px solid #94a3b8',
+  padding: '3px',
+  textAlign: 'center',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap'
 }

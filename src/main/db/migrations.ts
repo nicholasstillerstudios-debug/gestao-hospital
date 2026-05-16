@@ -1051,6 +1051,16 @@ const MIGRATIONS: Migration[] = [
       INSERT OR IGNORE INTO app_settings (key, value, updated_at)
         VALUES ('letterheadShowFooter', '1', datetime('now'));
     `
+  },
+  {
+    id: 19,
+    name: 'professionals_cns',
+    sql: `
+      -- CNS (Cartão Nacional de Saúde) do profissional é obrigatório no BPA-I.
+      ALTER TABLE professionals ADD COLUMN cns TEXT;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_professionals_cns
+        ON professionals(cns) WHERE cns IS NOT NULL;
+    `
   }
 ]
 

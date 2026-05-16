@@ -502,6 +502,7 @@ function ProfessionalModal({
   const [councilExpiresAt, setCouncilExpiresAt] = useState(professional?.councilExpiresAt ?? '')
   const [specialty, setSpecialty] = useState(professional?.specialty ?? '')
   const [cpf, setCpf] = useState(professional?.cpf ?? '')
+  const [cns, setCns] = useState(professional?.cns ?? '')
   const [email, setEmail] = useState(professional?.email ?? '')
   const [phone, setPhone] = useState(professional?.phone ?? '')
   const [error, setError] = useState<string | null>(null)
@@ -532,6 +533,7 @@ function ProfessionalModal({
       const payload = {
         fullName,
         cpf: cpf || null,
+        cns: cns || null,
         category: category || null,
         cboCode: cboCode || null,
         cboName: cboName || null,
@@ -585,6 +587,13 @@ function ProfessionalModal({
             </Field>
             <Field label="CPF">
               <Input value={cpf} onChange={(e) => setCpf(e.target.value.replace(/\D/g, ''))} />
+            </Field>
+            <Field label="CNS (Cartão SUS)" hint="Obrigatório para BPA-I SUS">
+              <Input
+                value={cns}
+                onChange={(e) => setCns(e.target.value.replace(/\D/g, '').slice(0, 15))}
+                placeholder="15 dígitos"
+              />
             </Field>
             <Field label="Telefone">
               <Input value={phone} onChange={(e) => setPhone(e.target.value)} />

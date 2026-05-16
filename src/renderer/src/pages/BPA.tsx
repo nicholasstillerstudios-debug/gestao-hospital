@@ -5,6 +5,7 @@
  *  - consolidação mensal (fecha o mês, totaliza)
  */
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '@renderer/components/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
 import { Modal } from '@renderer/components/ui/Modal'
@@ -29,6 +30,7 @@ const DEFAULT_YEAR = today.getFullYear()
 const DEFAULT_MONTH = today.getMonth() + 1
 
 export function BPAPage(): React.JSX.Element {
+  const navigate = useNavigate()
   const [year, setYear] = useState(DEFAULT_YEAR)
   const [month, setMonth] = useState(DEFAULT_MONTH)
   const [records, setRecords] = useState<BpaRecordWithRefs[]>([])
@@ -94,6 +96,12 @@ export function BPAPage(): React.JSX.Element {
           <>
             <Button variant="outline" onClick={() => setShowNew(true)}>
               + Registro
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/imprimir/bpa/${year}/${month}`)}
+            >
+              Imprimir BPA-I
             </Button>
             <Button onClick={() => void handleConsolidate()}>Consolidar mês</Button>
           </>
