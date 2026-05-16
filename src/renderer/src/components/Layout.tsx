@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '@renderer/stores/auth'
 import { useGlobalShortcuts } from '@renderer/hooks/useGlobalShortcuts'
@@ -429,13 +430,7 @@ const GROUPS: NavGroup[] = [
         icon: Icon.clipboard,
         roles: ['admin', 'medico', 'enfermagem']
       },
-      { to: '/leitos', label: 'Leitos', icon: Icon.bed },
-      {
-        to: '/imprimir/ficha/0',
-        label: 'Documentos',
-        icon: Icon.docs,
-        roles: ['admin', 'recepcao', 'medico', 'enfermagem']
-      }
+      { to: '/leitos', label: 'Leitos', icon: Icon.bed }
     ]
   },
   {
@@ -470,7 +465,6 @@ const GROUPS: NavGroup[] = [
   {
     category: 'Administração',
     items: [
-      { to: '/ponto', label: 'Ponto', icon: Icon.clock },
       { to: '/relatorios', label: 'Relatórios', icon: Icon.chart, roles: ['admin', 'medico'] },
       { to: '/admin', label: 'Administração', icon: Icon.cog, roles: ['admin'] }
     ]
@@ -556,7 +550,8 @@ export function Layout(): React.JSX.Element {
         </nav>
         <div className="app-sidebar-divider" aria-hidden />
         <div className="px-3 py-3">
-          <div className="flex items-center gap-3 rounded-lg bg-white/5 px-3 py-2.5 ring-1 ring-white/10">
+          <ConnectionIndicator />
+          <div className="mt-2 flex items-center gap-3 rounded-lg bg-white/5 px-3 py-2.5 ring-1 ring-white/10">
             <div className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-white ring-1 ring-white/15">
               {initials || '?'}
             </div>
@@ -583,6 +578,70 @@ export function Layout(): React.JSX.Element {
         </ErrorBoundary>
       </main>
       <UpdateBanner />
+    </div>
+  )
+}
+
+/**
+ * Indicador discreto de status de conexão. Em modo cliente faz health
+ * check no servidor LAN a cada 15s (verde / vermelho). Em standalone/
+ * server mostra o papel local (cinza / azul claro).
+ */
+function ConnectionIndicator(): React.JSX.Element | null {
+  const [s, setS] = useState<{
+    runMode: 'standalone' | 'server' | 'client'
+    connected: boolean
+    serverRunning: boolean
+    serverUrl: string | null
+    message: string
+  } | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const tick = (): void => {
+      void window.api.client
+        .status()
+        .then((r) => {
+          if (!cancelled) setS(r)
+        })
+        .catch(() => null)
+    }
+    tick()
+    const id = setInterval(tick, 15000)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [])
+
+  if (!s) return null
+  const color =
+    s.runMode === 'client'
+      ? s.connected
+        ? 'bg-emerald-400'
+        : 'bg-red-500'
+      : s.runMode === 'server'
+        ? s.serverRunning
+          ? 'bg-cyan-400'
+          : 'bg-amber-400'
+        : 'bg-slate-400'
+  const label =
+    s.runMode === 'client'
+      ? s.connected
+        ? 'Cliente · conectado'
+        : 'Cliente · sem conexão'
+      : s.runMode === 'server'
+        ? s.serverRunning
+          ? 'Servidor LAN ativo'
+          : 'Servidor não iniciou'
+        : 'Standalone (local)'
+  return (
+    <div
+      className="flex items-center gap-2 rounded-md bg-white/5 px-3 py-1.5 ring-1 ring-white/10"
+      title={s.message}
+    >
+      <span className={`inline-block h-2 w-2 flex-none rounded-full ${color}`} />
+      <span className="truncate text-[11px] text-white/75">{label}</span>
     </div>
   )
 }

@@ -139,6 +139,21 @@ export function registerClientHandlers(): void {
     ok: true,
     data: await pingServer(String(url))
   }))
+  ipcMain.handle(IPC.client.status, async () => {
+    const cfg = loadBootConfig()
+    const url = cfg.serverUrl ?? ''
+    const r = url ? await pingServer(url) : { ok: false, error: 'sem URL' }
+    return {
+      ok: true,
+      data: {
+        runMode: cfg.runMode,
+        connected: r.ok,
+        serverRunning: false,
+        serverUrl: url || null,
+        message: r.ok ? `Conectado · ${url}` : `Sem conexão: ${r.error ?? '?'}`
+      }
+    }
+  })
 
   // ── Updater fica desligado em modo cliente ──────────────────────────
   const idle: UpdaterStatus = { kind: 'idle' }
@@ -158,7 +173,8 @@ export function registerClientHandlers(): void {
     IPC.updater.quitAndInstall,
     IPC.client.getBoot,
     IPC.client.setBoot,
-    IPC.client.ping
+    IPC.client.ping,
+    IPC.client.status
   ])
   for (const channel of collectChannels()) {
     if (handled.has(channel)) continue

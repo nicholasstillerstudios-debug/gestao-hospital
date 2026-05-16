@@ -381,48 +381,6 @@ export interface BpaConsolidation {
   updatedAt: string
 }
 
-// ════════════════════════════════════════════════════════════════════
-//   Ponto Eletrônico
-// ════════════════════════════════════════════════════════════════════
-
-export type TimeclockEntryType = 'entrada' | 'saida' | 'intervalo_inicio' | 'intervalo_fim'
-
-export const TIMECLOCK_ENTRY_TYPE_LABELS: Record<TimeclockEntryType, string> = {
-  entrada: 'Entrada',
-  saida: 'Saída',
-  intervalo_inicio: 'Início de intervalo',
-  intervalo_fim: 'Fim de intervalo'
-}
-
-export interface TimeclockEntry {
-  id: number
-  professionalId: number
-  type: TimeclockEntryType
-  recordedAt: string
-  notes: string | null
-  createdByUserId: number | null
-  createdAt: string
-}
-
-export interface TimeclockEntryWithRefs extends TimeclockEntry {
-  professionalName: string
-}
-
-export interface TimeclockEntryInput {
-  professionalId: number
-  type: TimeclockEntryType
-  recordedAt?: string
-  notes?: string | null
-}
-
-export interface TimeclockDaySummary {
-  date: string
-  entries: TimeclockEntry[]
-  workedMinutes: number
-  breakMinutes: number
-  consistent: boolean
-}
-
 export interface AuditLogEntry {
   id: number
   userId: number | null

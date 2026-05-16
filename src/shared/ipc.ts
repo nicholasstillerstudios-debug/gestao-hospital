@@ -116,12 +116,6 @@ export const IPC = {
     getSummary: 'bpa:get-summary',
     exportFile: 'bpa:export-file'
   },
-  timeclock: {
-    listEntries: 'timeclock:list-entries',
-    createEntry: 'timeclock:create-entry',
-    deleteEntry: 'timeclock:delete-entry',
-    getDaySummaries: 'timeclock:get-day-summaries'
-  },
   print: {
     saveCurrentAsPdf: 'print:save-current-as-pdf'
   },
@@ -261,7 +255,8 @@ export const IPC = {
   client: {
     getBoot: 'client:get-boot',
     setBoot: 'client:set-boot',
-    ping: 'client:ping'
+    ping: 'client:ping',
+    status: 'client:status'
   },
   drive: {
     status: 'drive:status',

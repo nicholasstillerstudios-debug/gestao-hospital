@@ -29,7 +29,6 @@ import * as prescriptionsRepo from './repositories/prescriptions'
 import * as requisitionsRepo from './repositories/requisitions'
 import * as callsRepo from './repositories/calls'
 import * as bpaRepo from './repositories/bpa'
-import * as timeclockRepo from './repositories/timeclock'
 import { createSecondaryWindow, isPanelWindow } from './windows'
 import { listAudit, logAudit, purgeAuditOlderThan } from './audit'
 import type {
@@ -69,8 +68,7 @@ import type {
   RequisitionInput,
   RequisitionStatus,
   TriageRecordInput,
-  BpaRecordInput,
-  TimeclockEntryInput
+  BpaRecordInput
 } from '@shared/types'
 import type { AttendanceSaveInput } from './repositories/attendances'
 
@@ -123,6 +121,20 @@ export function registerIpcHandlers(): void {
   registerHandler(IPC.client.ping, async (url: unknown) => {
     const { pingServer } = await import('./client/proxy')
     return await pingServer(String(url))
+  })
+  registerHandler(IPC.client.status, async () => {
+    // No host (standalone ou server) o status reflete o próprio papel,
+    // sem dependência externa — sempre "ok".
+    const { isServerRunning } = await import('./server')
+    const { loadBootConfig } = await import('./client/config')
+    const boot = loadBootConfig()
+    return {
+      runMode: boot.runMode,
+      connected: true,
+      serverRunning: isServerRunning(),
+      serverUrl: null as string | null,
+      message: boot.runMode === 'server' ? 'Servindo LAN' : 'Local'
+    }
   })
 
   // ---------- Drive backup (Google) ----------
@@ -1286,41 +1298,6 @@ export function registerIpcHandlers(): void {
     })
     return { saved: true, path: chosen.filePath, lineCount: result.lineCount }
   })
-
-  // ============================================================
-  //   PONTO ELETRÔNICO
-  // ============================================================
-  registerHandler(IPC.timeclock.listEntries, (options: unknown) => {
-    requireUser()
-    return timeclockRepo.listEntries(
-      (options as {
-        professionalId?: number
-        fromDate?: string
-        toDate?: string
-        limit?: number
-      }) ?? undefined
-    )
-  })
-  registerHandler(IPC.timeclock.createEntry, (input: unknown) => {
-    requireUser()
-    return timeclockRepo.createEntry(input as TimeclockEntryInput)
-  })
-  registerHandler(IPC.timeclock.deleteEntry, (id: unknown) => {
-    requireUser()
-    timeclockRepo.deleteEntry(Number(id))
-    return null
-  })
-  registerHandler(
-    IPC.timeclock.getDaySummaries,
-    (professionalId: unknown, fromDate: unknown, toDate: unknown) => {
-      requireUser()
-      return timeclockRepo.getDaySummaries(
-        Number(professionalId),
-        String(fromDate),
-        String(toDate)
-      )
-    }
-  )
 
   // ---------- Print to PDF ----------
   // Captura o conteúdo da janela atual como PDF A4 e abre Salvar como.

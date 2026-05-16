@@ -29,7 +29,6 @@ import { TriagePage } from './pages/Triage'
 import { CallPanelPage } from './pages/CallPanel'
 import { BPAPage } from './pages/BPA'
 import { SinanPage } from './pages/Sinan'
-import { PontoPage } from './pages/Ponto'
 import { ExamesPage } from './pages/Exames'
 import {
   PrintAIHPage,
@@ -313,14 +312,6 @@ function App(): React.JSX.Element {
           element={
             <ProtectedRoute roles={['admin', 'medico', 'enfermagem']}>
               <SinanPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/ponto"
-          element={
-            <ProtectedRoute>
-              <PontoPage />
             </ProtectedRoute>
           }
         />

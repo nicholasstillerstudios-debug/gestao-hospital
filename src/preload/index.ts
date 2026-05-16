@@ -34,9 +34,6 @@ import type {
   RequisitionInput,
   RequisitionStatus,
   RequisitionWithRefs,
-  TimeclockDaySummary,
-  TimeclockEntryInput,
-  TimeclockEntryWithRefs,
   TriageColor,
   TriageRecord,
   TriageRecordInput,
@@ -306,23 +303,6 @@ const api = {
       month: number
     ): Promise<{ saved: boolean; path: string | null; lineCount: number }> =>
       invoke(IPC.bpa.exportFile, year, month)
-  },
-  timeclock: {
-    listEntries: (filter?: {
-      professionalId?: number
-      fromDate?: string
-      toDate?: string
-      limit?: number
-    }): Promise<TimeclockEntryWithRefs[]> => invoke(IPC.timeclock.listEntries, filter ?? {}),
-    createEntry: (input: TimeclockEntryInput): Promise<TimeclockEntryWithRefs> =>
-      invoke(IPC.timeclock.createEntry, input),
-    deleteEntry: (id: number): Promise<null> => invoke(IPC.timeclock.deleteEntry, id),
-    getDaySummaries: (
-      professionalId: number,
-      fromDate: string,
-      toDate: string
-    ): Promise<TimeclockDaySummary[]> =>
-      invoke(IPC.timeclock.getDaySummaries, professionalId, fromDate, toDate)
   },
   reports: {
     dashboard: (dateIso: string): Promise<DashboardStats> => invoke(IPC.reports.dashboard, dateIso),
@@ -612,7 +592,14 @@ const api = {
     setBoot: (cfg: { runMode: 'standalone' | 'server' | 'client'; serverUrl?: string; serverPort?: number }): Promise<{ ok: boolean }> =>
       invoke(IPC.client.setBoot, cfg),
     ping: (url: string): Promise<{ ok: boolean; version?: string; error?: string }> =>
-      invoke(IPC.client.ping, url)
+      invoke(IPC.client.ping, url),
+    status: (): Promise<{
+      runMode: 'standalone' | 'server' | 'client'
+      connected: boolean
+      serverRunning: boolean
+      serverUrl: string | null
+      message: string
+    }> => invoke(IPC.client.status)
   },
   drive: {
     status: (): Promise<{
