@@ -2,14 +2,20 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ageFromBirthDate, formatCpf, formatDateBr, formatDateTimeBr } from '@renderer/lib/utils'
 import type {
+  AdmissionWithRefs,
+  AdmissionEvolutionWithRefs,
   AppointmentWithRefs,
   Attendance,
   BpaRecordWithRefs,
   Patient,
   PrescriptionWithRefs,
-  RequisitionWithRefs
+  RequisitionWithRefs,
+  SinanNotificationWithRefs,
+  SurgeryOpme,
+  SurgeryTimeOutItem,
+  SurgeryWithRefs
 } from '@shared/types'
-import { REQUISITION_TYPE_LABELS } from '@shared/types'
+import { ANESTHESIA_TYPE_LABELS, REQUISITION_TYPE_LABELS } from '@shared/types'
 
 export interface UnitInfo {
   unitName: string
@@ -961,4 +967,361 @@ const bpaTd: React.CSSProperties = {
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap'
+}
+
+// ════════════════════════════════════════════════════════════════════
+//   AIH — Autorização de Internação Hospitalar
+// ════════════════════════════════════════════════════════════════════
+export function PrintAIHPage(): React.JSX.Element {
+  const { admissionId } = useParams()
+  const navigate = useNavigate()
+  const { unit, logos, layout } = useUnitInfo()
+  const [adm, setAdm] = useState<AdmissionWithRefs | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void window.api.admissions
+      .get(Number(admissionId))
+      .then((a) => !cancelled && setAdm(a))
+      .catch((e) => !cancelled && setError((e as Error).message))
+    return () => {
+      cancelled = true
+    }
+  }, [admissionId])
+
+  if (error) return <PrintError message={error} onClose={() => navigate(-1)} />
+  if (!adm) return <div className="print-document">Carregando…</div>
+
+  return (
+    <div className="print-document">
+      <PrintToolbar
+        onPrint={() => window.print()}
+        onSavePdf={() => void saveAsPdf(`aih-${adm.id}`)}
+        onClose={() => navigate(-1)}
+      />
+      <PrintHeader title="AUTORIZAÇÃO DE INTERNAÇÃO HOSPITALAR (AIH)" unit={unit} logos={logos} layout={layout} />
+      <Grid>
+        <Cell label="Nº AIH">{adm.aihNumber || '——————————'}</Cell>
+        <Cell label="Data da admissão">{formatDateBr(adm.admittedAt)}</Cell>
+        <Cell label="Caráter">{adm.admissionType}</Cell>
+        <Cell label="Leito atual">
+          {adm.currentBed ? `${adm.currentBed.code} (${adm.currentBed.wardName})` : '—'}
+        </Cell>
+      </Grid>
+      <h3 style={{ marginTop: 16, fontSize: 12, textTransform: 'uppercase', color: '#475569' }}>
+        Identificação do paciente
+      </h3>
+      <Grid>
+        <Cell label="Nome">{adm.patient.fullName}</Cell>
+        <Cell label="Sexo">{adm.patient.sex}</Cell>
+        <Cell label="Nascimento">{formatDateBr(adm.patient.birthDate)} ({ageFromBirthDate(adm.patient.birthDate)} anos)</Cell>
+        <Cell label="CPF">{adm.patient.cpf ? formatCpf(adm.patient.cpf) : '—'}</Cell>
+        <Cell label="CNS">{adm.patient.cns || '—'}</Cell>
+      </Grid>
+      <h3 style={{ marginTop: 16, fontSize: 12, textTransform: 'uppercase', color: '#475569' }}>
+        Dados da autorização
+      </h3>
+      <Grid>
+        <Cell label="CID-10 principal">{adm.admissionCid10 || '——'}</Cell>
+        <Cell label="Diagnóstico">{adm.admissionDiagnosis || '—'}</Cell>
+        <Cell label="Proc. principal (SIGTAP)">{adm.aihMainProcedureCode || '——————————'}</Cell>
+        <Cell label="Médico solicitante">
+          {adm.attendingProfessional?.fullName ?? '—'}
+        </Cell>
+      </Grid>
+      <SoapBlock label="Justificativa clínica" value={adm.aihJustification || '—'} />
+      <SoapBlock label="Queixa principal" value={adm.chiefComplaint || '—'} />
+      <PrintSignature professional="________________________________________" subtitle="Médico solicitante / CRM" />
+    </div>
+  )
+}
+
+// ════════════════════════════════════════════════════════════════════
+//   Resumo de Alta Hospitalar
+// ════════════════════════════════════════════════════════════════════
+export function PrintDischargeSummaryPage(): React.JSX.Element {
+  const { admissionId } = useParams()
+  const navigate = useNavigate()
+  const { unit, logos, layout } = useUnitInfo()
+  const [adm, setAdm] = useState<AdmissionWithRefs | null>(null)
+  const [evolutions, setEvolutions] = useState<AdmissionEvolutionWithRefs[]>([])
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async (): Promise<void> => {
+      try {
+        const a = await window.api.admissions.get(Number(admissionId))
+        if (cancelled) return
+        setAdm(a)
+        if (a) {
+          const evs = await window.api.evolutions.listForAdmission(a.id)
+          if (!cancelled) setEvolutions(evs)
+        }
+      } catch (e) {
+        if (!cancelled) setError((e as Error).message)
+      }
+    }
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [admissionId])
+
+  if (error) return <PrintError message={error} onClose={() => navigate(-1)} />
+  if (!adm) return <div className="print-document">Carregando…</div>
+
+  const totalDias =
+    adm.dischargeAt && adm.admittedAt
+      ? Math.max(
+          1,
+          Math.floor(
+            (new Date(adm.dischargeAt).getTime() - new Date(adm.admittedAt).getTime()) /
+              (24 * 3600 * 1000)
+          )
+        )
+      : '—'
+
+  return (
+    <div className="print-document">
+      <PrintToolbar
+        onPrint={() => window.print()}
+        onSavePdf={() => void saveAsPdf(`alta-${adm.id}`)}
+        onClose={() => navigate(-1)}
+      />
+      <PrintHeader title="RESUMO DE ALTA HOSPITALAR" unit={unit} logos={logos} layout={layout} />
+      <Grid>
+        <Cell label="Paciente">{adm.patient.fullName}</Cell>
+        <Cell label="CPF / CNS">
+          {adm.patient.cpf ? formatCpf(adm.patient.cpf) : '—'}
+          {adm.patient.cns ? ` · CNS ${adm.patient.cns}` : ''}
+        </Cell>
+        <Cell label="Nascimento">{formatDateBr(adm.patient.birthDate)}</Cell>
+        <Cell label="Sexo">{adm.patient.sex}</Cell>
+      </Grid>
+      <Grid>
+        <Cell label="Admissão">{formatDateTimeBr(adm.admittedAt)}</Cell>
+        <Cell label="Alta">{adm.dischargeAt ? formatDateTimeBr(adm.dischargeAt) : '—'}</Cell>
+        <Cell label="Dias internado">{totalDias}</Cell>
+        <Cell label="Tipo de alta">{adm.dischargeType ?? '—'}</Cell>
+      </Grid>
+      <SoapBlock label="Diagnóstico de admissão (CID-10)" value={`${adm.admissionCid10 ?? '—'} — ${adm.admissionDiagnosis ?? ''}`} />
+      <SoapBlock label="Diagnóstico de alta (CID-10)" value={adm.dischargeCid10 ?? '—'} />
+      <SoapBlock label="Queixa principal na admissão" value={adm.chiefComplaint} />
+      <SoapBlock label="Resumo da internação / evolução" value={adm.dischargeSummary} />
+      {evolutions.length > 0 ? (
+        <section style={{ marginTop: 12 }}>
+          <h3 style={{ fontSize: 12, textTransform: 'uppercase', color: '#475569' }}>
+            Evoluções clínicas durante a internação
+          </h3>
+          <ul style={{ fontSize: 11, marginLeft: 16 }}>
+            {evolutions.slice(0, 10).map((e) => (
+              <li key={e.id} style={{ marginBottom: 4 }}>
+                <strong>{formatDateTimeBr(e.evolutionAt)}</strong>
+                {e.professionalName ? ` — ${e.professionalName}` : ''}:{' '}
+                {(e.assessment || e.plan || e.subjective || '').slice(0, 240) || '—'}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+      <p className="muted" style={{ fontSize: 10, marginTop: 16 }}>
+        Orientações pós-alta: retornar à unidade em caso de piora, dor intensa, febre persistente
+        ou qualquer sintoma novo. Manter medicações prescritas e consultas de retorno conforme
+        agendamento.
+      </p>
+      <PrintSignature
+        professional={adm.attendingProfessional?.fullName ?? '________________________________________'}
+        subtitle="Médico responsável / CRM"
+      />
+    </div>
+  )
+}
+
+// ════════════════════════════════════════════════════════════════════
+//   Folha de Sala Cirúrgica
+// ════════════════════════════════════════════════════════════════════
+export function PrintSurgeryReportPage(): React.JSX.Element {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const { unit, logos, layout } = useUnitInfo()
+  const [surgery, setSurgery] = useState<SurgeryWithRefs | null>(null)
+  const [timeOut, setTimeOut] = useState<SurgeryTimeOutItem[]>([])
+  const [opme, setOpme] = useState<SurgeryOpme[]>([])
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async (): Promise<void> => {
+      try {
+        const sId = Number(id)
+        const [s, t, o] = await Promise.all([
+          window.api.surgery.getSurgery(sId),
+          window.api.surgery.listTimeOut(sId),
+          window.api.surgery.listOpme(sId)
+        ])
+        if (cancelled) return
+        setSurgery(s)
+        setTimeOut(t)
+        setOpme(o)
+      } catch (e) {
+        if (!cancelled) setError((e as Error).message)
+      }
+    }
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [id])
+
+  if (error) return <PrintError message={error} onClose={() => navigate(-1)} />
+  if (!surgery) return <div className="print-document">Carregando…</div>
+
+  const dur =
+    surgery.actualStart && surgery.actualEnd
+      ? Math.round(
+          (new Date(surgery.actualEnd).getTime() - new Date(surgery.actualStart).getTime()) / 60000
+        )
+      : null
+
+  return (
+    <div className="print-document">
+      <PrintToolbar
+        onPrint={() => window.print()}
+        onSavePdf={() => void saveAsPdf(`folha-sala-${surgery.id}`)}
+        onClose={() => navigate(-1)}
+      />
+      <PrintHeader title="FOLHA DE SALA CIRÚRGICA" unit={unit} logos={logos} layout={layout} />
+      <Grid>
+        <Cell label="Paciente">{surgery.patientName}</Cell>
+        <Cell label="CPF">{surgery.patientCpf ? formatCpf(surgery.patientCpf) : '—'}</Cell>
+        <Cell label="Sala">{surgery.roomName ?? '—'}</Cell>
+        <Cell label="Prioridade">{surgery.priority}</Cell>
+      </Grid>
+      <Grid>
+        <Cell label="Procedimento">{surgery.procedureName}</Cell>
+        <Cell label="CID-10">{surgery.procedureCid10 ?? '—'}</Cell>
+        <Cell label="Anestesia">
+          {surgery.anesthesiaType ? ANESTHESIA_TYPE_LABELS[surgery.anesthesiaType] : '—'}
+        </Cell>
+        <Cell label="Status">{surgery.status}</Cell>
+      </Grid>
+      <Grid>
+        <Cell label="Cirurgião">{surgery.surgeonName ?? '—'}</Cell>
+        <Cell label="Anestesista">{surgery.anesthetistName ?? '—'}</Cell>
+        <Cell label="Início">{surgery.actualStart ? formatDateTimeBr(surgery.actualStart) : '—'}</Cell>
+        <Cell label="Fim">{surgery.actualEnd ? formatDateTimeBr(surgery.actualEnd) : '—'}</Cell>
+      </Grid>
+      {dur != null ? (
+        <p style={{ fontSize: 11, marginTop: 6 }}>
+          <strong>Duração:</strong> {dur} minutos
+        </p>
+      ) : null}
+      <h3 style={{ marginTop: 16, fontSize: 12, textTransform: 'uppercase', color: '#475569' }}>
+        Time-out (WHO Surgical Safety)
+      </h3>
+      <ul style={{ fontSize: 11, marginLeft: 16 }}>
+        {timeOut.length === 0 ? (
+          <li>—</li>
+        ) : (
+          timeOut.map((t) => (
+            <li key={t.id}>
+              {t.checked ? '☒' : '☐'} {t.item}
+              {t.checkedAt ? ` — ${formatDateTimeBr(t.checkedAt)}` : ''}
+            </li>
+          ))
+        )}
+      </ul>
+      <h3 style={{ marginTop: 16, fontSize: 12, textTransform: 'uppercase', color: '#475569' }}>
+        Materiais (OPME)
+      </h3>
+      <ul style={{ fontSize: 11, marginLeft: 16 }}>
+        {opme.length === 0 ? (
+          <li>—</li>
+        ) : (
+          opme.map((o) => (
+            <li key={o.id}>
+              {o.quantity}× {o.description}
+              {o.lotNumber ? ` · lote ${o.lotNumber}` : ''}
+              {o.manufacturer ? ` · ${o.manufacturer}` : ''}
+            </li>
+          ))
+        )}
+      </ul>
+      <SoapBlock label="Descrição cirúrgica" value={surgery.description} />
+      <SoapBlock label="Observações" value={surgery.notes} />
+      <PrintSignature
+        professional={surgery.surgeonName ?? '________________________________________'}
+        subtitle="Cirurgião / CRM"
+      />
+    </div>
+  )
+}
+
+// ════════════════════════════════════════════════════════════════════
+//   Ficha de Notificação SINAN
+// ════════════════════════════════════════════════════════════════════
+export function PrintSinanPage(): React.JSX.Element {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const { unit, logos, layout } = useUnitInfo()
+  const [n, setN] = useState<SinanNotificationWithRefs | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void window.api.sinan
+      .get(Number(id))
+      .then((r) => !cancelled && setN(r))
+      .catch((e) => !cancelled && setError((e as Error).message))
+    return () => {
+      cancelled = true
+    }
+  }, [id])
+
+  if (error) return <PrintError message={error} onClose={() => navigate(-1)} />
+  if (!n) return <div className="print-document">Carregando…</div>
+
+  return (
+    <div className="print-document">
+      <PrintToolbar
+        onPrint={() => window.print()}
+        onSavePdf={() => void saveAsPdf(`sinan-${n.id}`)}
+        onClose={() => navigate(-1)}
+      />
+      <PrintHeader title="FICHA DE NOTIFICAÇÃO / INVESTIGAÇÃO — SINAN" unit={unit} logos={logos} layout={layout} />
+      <Grid>
+        <Cell label="Nº da notificação">{n.id}</Cell>
+        <Cell label="Data da notificação">{formatDateTimeBr(n.notificadoEm)}</Cell>
+        <Cell label="Agravo (CID-10)">{n.agravoCid}</Cell>
+        <Cell label="Agravo">{n.agravoName}</Cell>
+      </Grid>
+      <h3 style={{ marginTop: 16, fontSize: 12, textTransform: 'uppercase', color: '#475569' }}>
+        Identificação do paciente
+      </h3>
+      <Grid>
+        <Cell label="Nome">{n.patientName}</Cell>
+        <Cell label="CPF">{n.patientCpf ? formatCpf(n.patientCpf) : '—'}</Cell>
+        <Cell label="CNS">{n.patientCns || '—'}</Cell>
+        <Cell label="Nascimento">{n.patientBirthDate ? formatDateBr(n.patientBirthDate) : '—'}</Cell>
+        <Cell label="Sexo">{n.patientSex || '—'}</Cell>
+      </Grid>
+      <h3 style={{ marginTop: 16, fontSize: 12, textTransform: 'uppercase', color: '#475569' }}>
+        Dados clínicos
+      </h3>
+      <Grid>
+        <Cell label="Início dos sintomas">
+          {n.sintomasIniciaisEm ? formatDateBr(n.sintomasIniciaisEm) : '—'}
+        </Cell>
+        <Cell label="Classificação">{n.classificacao || '—'}</Cell>
+        <Cell label="Evolução">{n.evolucao || '—'}</Cell>
+      </Grid>
+      <SoapBlock label="Observações" value={n.observations} />
+      <PrintSignature
+        professional={n.professionalName ?? '________________________________________'}
+        subtitle={n.professionalCns ? `CNS ${n.professionalCns}` : 'Profissional notificador'}
+      />
+    </div>
+  )
 }

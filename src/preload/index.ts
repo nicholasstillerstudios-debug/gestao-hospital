@@ -94,7 +94,9 @@ import type {
   InfectionSite,
   Isolation,
   IsolationInput,
-  IrasIndicators
+  IrasIndicators,
+  SinanNotificationInput,
+  SinanNotificationWithRefs
 } from '@shared/types'
 
 interface PublicUnitSettings {
@@ -442,7 +444,13 @@ const api = {
     discharge: (input: DischargeAdmissionInput): Promise<AdmissionWithRefs> =>
       invoke(IPC.admissions.discharge, input),
     listMovements: (admissionId: number): Promise<BedMovement[]> =>
-      invoke(IPC.admissions.listMovements, admissionId)
+      invoke(IPC.admissions.listMovements, admissionId),
+    setAih: (input: {
+      admissionId: number
+      aihNumber: string | null
+      aihMainProcedureCode: string | null
+      aihJustification: string | null
+    }): Promise<AdmissionWithRefs> => invoke(IPC.admissions.setAih, input)
   },
   evolutions: {
     listForAdmission: (admissionId: number): Promise<AdmissionEvolutionWithRefs[]> =>
@@ -550,7 +558,9 @@ const api = {
     listOpme: (surgeryId: number): Promise<SurgeryOpme[]> =>
       invoke(IPC.surgery.listOpme, surgeryId),
     addOpme: (input: SurgeryOpmeInput): Promise<SurgeryOpme> => invoke(IPC.surgery.addOpme, input),
-    removeOpme: (id: number): Promise<null> => invoke(IPC.surgery.removeOpme, id)
+    removeOpme: (id: number): Promise<null> => invoke(IPC.surgery.removeOpme, id),
+    setDescription: (id: number, description: string): Promise<SurgeryWithRefs> =>
+      invoke(IPC.surgery.setDescription, id, description)
   },
   ccih: {
     listIras: (options?: {
@@ -574,6 +584,23 @@ const api = {
       invoke(IPC.ccih.endIsolation, id, reason),
     indicators: (options?: { fromDate?: string; toDate?: string }): Promise<IrasIndicators> =>
       invoke(IPC.ccih.indicators, options)
+  },
+  sinan: {
+    list: (filter?: {
+      fromDate?: string
+      toDate?: string
+      agravoCid?: string
+    }): Promise<SinanNotificationWithRefs[]> => invoke(IPC.sinan.list, filter ?? {}),
+    get: (id: number): Promise<SinanNotificationWithRefs | null> => invoke(IPC.sinan.get, id),
+    create: (input: SinanNotificationInput): Promise<SinanNotificationWithRefs> =>
+      invoke(IPC.sinan.create, input),
+    delete: (id: number): Promise<null> => invoke(IPC.sinan.delete, id),
+    exportCsv: (filter?: {
+      fromDate?: string
+      toDate?: string
+      agravoCid?: string
+    }): Promise<{ saved: boolean; path: string | null; count: number }> =>
+      invoke(IPC.sinan.exportCsv, filter ?? {})
   },
   client: {
     getBoot: (): Promise<{

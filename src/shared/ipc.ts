@@ -169,7 +169,8 @@ export const IPC = {
     admit: 'admissions:admit',
     transfer: 'admissions:transfer',
     discharge: 'admissions:discharge',
-    listMovements: 'admissions:list-movements'
+    listMovements: 'admissions:list-movements',
+    setAih: 'admissions:set-aih'
   },
   evolutions: {
     listForAdmission: 'evolutions:list-for-admission',
@@ -228,7 +229,15 @@ export const IPC = {
     checkTimeOutItem: 'surgery:check-time-out-item',
     listOpme: 'surgery:list-opme',
     addOpme: 'surgery:add-opme',
-    removeOpme: 'surgery:remove-opme'
+    removeOpme: 'surgery:remove-opme',
+    setDescription: 'surgery:set-description'
+  },
+  sinan: {
+    list: 'sinan:list',
+    get: 'sinan:get',
+    create: 'sinan:create',
+    delete: 'sinan:delete',
+    exportCsv: 'sinan:export-csv'
   },
   ccih: {
     listIras: 'ccih:list-iras',

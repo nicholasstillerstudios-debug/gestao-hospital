@@ -625,6 +625,16 @@ export function registerIpcHandlers(): void {
     return admissionsRepo.dischargeAdmission(input as DischargeAdmissionInput)
   })
 
+  registerHandler(IPC.admissions.setAih, (input: unknown) => {
+    requireRole('admin', 'medico')
+    return admissionsRepo.setAih(input as {
+      admissionId: number
+      aihNumber: string | null
+      aihMainProcedureCode: string | null
+      aihJustification: string | null
+    })
+  })
+
   registerHandler(IPC.admissions.listMovements, (admissionId: unknown) => {
     requireUser()
     return admissionsRepo.listBedMovements(Number(admissionId))
@@ -873,6 +883,60 @@ export function registerIpcHandlers(): void {
     requireRole('admin', 'medico', 'enfermagem')
     surgeryRepo.removeOpme(Number(id))
     return null
+  })
+  registerHandler(IPC.surgery.setDescription, (id: unknown, description: unknown) => {
+    requireRole('admin', 'medico')
+    return surgeryRepo.setSurgeryDescription(Number(id), String(description ?? ''))
+  })
+
+  // ============================================================
+  //   SINAN
+  // ============================================================
+  registerHandler(IPC.sinan.list, async (filter: unknown) => {
+    requireUser()
+    const sinan = await import('./repositories/sinan')
+    return sinan.listNotifications(
+      (filter as { fromDate?: string; toDate?: string; agravoCid?: string }) ?? undefined
+    )
+  })
+  registerHandler(IPC.sinan.get, async (id: unknown) => {
+    requireUser()
+    const sinan = await import('./repositories/sinan')
+    return sinan.getNotification(Number(id))
+  })
+  registerHandler(IPC.sinan.create, async (input: unknown) => {
+    requireRole('admin', 'medico', 'enfermagem')
+    const sinan = await import('./repositories/sinan')
+    return sinan.createNotification(input as Parameters<typeof sinan.createNotification>[0])
+  })
+  registerHandler(IPC.sinan.delete, async (id: unknown) => {
+    requireRole('admin')
+    const sinan = await import('./repositories/sinan')
+    sinan.deleteNotification(Number(id))
+    return null
+  })
+  registerHandler(IPC.sinan.exportCsv, async (filter: unknown) => {
+    requireRole('admin', 'medico', 'enfermagem')
+    const sinan = await import('./repositories/sinan')
+    const items = sinan.listNotifications(
+      (filter as { fromDate?: string; toDate?: string; agravoCid?: string }) ?? undefined
+    )
+    if (items.length === 0) {
+      throw Object.assign(new Error('Sem notificações no período.'), { code: 'SINAN_EMPTY' })
+    }
+    const csv = sinan.buildCsv(items)
+    const defaultName = `sinan-${new Date().toISOString().slice(0, 10)}.csv`
+    const chosen = await dialog.showSaveDialog({
+      title: 'Exportar CSV SINAN',
+      defaultPath: defaultName,
+      filters: [{ name: 'CSV', extensions: ['csv'] }]
+    })
+    if (chosen.canceled || !chosen.filePath) {
+      return { saved: false, path: null as string | null, count: 0 }
+    }
+    writeFileSync(chosen.filePath, csv, { encoding: 'utf8' })
+    sinan.markExported(items.map((i) => i.id))
+    return { saved: true, path: chosen.filePath, count: items.length }
   })
 
   // ============================================================

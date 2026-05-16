@@ -137,6 +137,7 @@ interface SurgeryRow {
   time_out_at: string | null
   notes: string | null
   cancel_reason: string | null
+  description: string | null
   created_by_user_id: number | null
   created_at: string
   updated_at: string
@@ -171,6 +172,7 @@ function toSurgery(r: SurgeryRow): Surgery {
     timeOutAt: r.time_out_at,
     notes: r.notes,
     cancelReason: r.cancel_reason,
+    description: r.description,
     createdAt: r.created_at,
     updatedAt: r.updated_at
   }
@@ -391,6 +393,18 @@ export function cancelSurgery(id: number, reason: string): SurgeryWithRefs {
   ).run(reason.trim(), id)
   logAudit({ action: 'update', entity: 'surgery', entityId: id, details: { status: 'cancelada' } })
   return getSurgery(id)!
+}
+
+/** Atualiza a descrição cirúrgica (texto livre da Folha de Sala). */
+export function setSurgeryDescription(id: number, description: string): SurgeryWithRefs {
+  const db = getDb()
+  db.prepare(
+    `UPDATE surgeries SET description = ?, updated_at = datetime('now') WHERE id = ?`
+  ).run(description?.trim() || null, id)
+  logAudit({ action: 'update', entity: 'surgery_description', entityId: id })
+  const r = getSurgery(id)
+  if (!r) throw new Error('Cirurgia não encontrada.')
+  return r
 }
 
 // ────────────────────────────────────────────────────── time-out ────────

@@ -891,9 +891,22 @@ export interface Admission {
   dischargeSummary: string | null
   dischargeCid10: string | null
   notes: string | null
+  /** Número da AIH emitida pelo gestor (preenchido manualmente). */
+  aihNumber: string | null
+  /** Código SIGTAP do procedimento principal autorizado na AIH. */
+  aihMainProcedureCode: string | null
+  /** Justificativa clínica usada na AIH. */
+  aihJustification: string | null
   createdByUserId: number | null
   createdAt: string
   updatedAt: string
+}
+
+export interface AihInput {
+  admissionId: number
+  aihNumber: string | null
+  aihMainProcedureCode: string | null
+  aihJustification: string | null
 }
 
 export interface AdmissionWithRefs extends Admission {
@@ -1557,6 +1570,8 @@ export interface Surgery {
   timeOutAt: string | null
   notes: string | null
   cancelReason: string | null
+  /** Descrição cirúrgica para a Folha de Sala. */
+  description: string | null
   createdAt: string
   updatedAt: string
 }
@@ -1737,5 +1752,66 @@ export interface IrasIndicators {
   deviceAssociated: number
   activeIsolations: number
 }
+
+// ════════════════════════════════════════════════════════════════════
+//   SINAN — Notificação Compulsória
+// ════════════════════════════════════════════════════════════════════
+
+export interface SinanNotification {
+  id: number
+  patientId: number
+  professionalId: number | null
+  agravoCid: string
+  agravoName: string
+  sintomasIniciaisEm: string | null
+  notificadoEm: string
+  classificacao: string | null
+  evolucao: string | null
+  observations: string | null
+  exportedAt: string | null
+  createdByUserId: number | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SinanNotificationWithRefs extends SinanNotification {
+  patientName: string
+  patientCpf: string | null
+  patientCns: string | null
+  patientBirthDate: string | null
+  patientSex: Sex | null
+  professionalName: string | null
+  professionalCns: string | null
+}
+
+export interface SinanNotificationInput {
+  patientId: number
+  professionalId?: number | null
+  agravoCid: string
+  agravoName: string
+  sintomasIniciaisEm?: string | null
+  classificacao?: string | null
+  evolucao?: string | null
+  observations?: string | null
+}
+
+/** Agravos mais frequentes de notificação compulsória. */
+export const SINAN_COMMON_AGRAVOS: Array<{ cid: string; name: string }> = [
+  { cid: 'A90', name: 'Dengue' },
+  { cid: 'A92.0', name: 'Chikungunya' },
+  { cid: 'A92.5', name: 'Zika' },
+  { cid: 'B16', name: 'Hepatite B' },
+  { cid: 'B17.1', name: 'Hepatite C' },
+  { cid: 'B20', name: 'HIV/AIDS' },
+  { cid: 'A53.9', name: 'Sífilis' },
+  { cid: 'A15', name: 'Tuberculose' },
+  { cid: 'A37', name: 'Coqueluche' },
+  { cid: 'B05', name: 'Sarampo' },
+  { cid: 'B26', name: 'Caxumba' },
+  { cid: 'A33', name: 'Tétano neonatal' },
+  { cid: 'A36', name: 'Difteria' },
+  { cid: 'G03', name: 'Meningite' },
+  { cid: 'U07.1', name: 'COVID-19' }
+]
 
 export type IpcResult<T> = { ok: true; data: T } | { ok: false; error: AppError }

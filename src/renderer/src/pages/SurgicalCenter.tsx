@@ -718,7 +718,16 @@ function SurgeryDetailModal({
         <p className="text-xs text-slate-500">Nenhum OPME registrado.</p>
       )}
 
-      <div className="mt-6 flex justify-end">
+      <div className="mt-6 flex justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={() => {
+            const w = window.open(`#/imprimir/cirurgia/${surgery.id}`, '_blank')
+            if (!w) window.location.hash = `#/imprimir/cirurgia/${surgery.id}`
+          }}
+        >
+          Folha de sala
+        </Button>
         <Button variant="outline" onClick={onClose}>
           Fechar
         </Button>

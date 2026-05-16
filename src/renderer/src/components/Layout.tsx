@@ -458,7 +458,13 @@ const GROUPS: NavGroup[] = [
   {
     category: 'SUS',
     items: [
-      { to: '/bpa', label: 'BPA / Produção', icon: Icon.chart, roles: ['admin', 'medico'] }
+      { to: '/bpa', label: 'BPA / Produção', icon: Icon.chart, roles: ['admin', 'medico'] },
+      {
+        to: '/sinan',
+        label: 'SINAN',
+        icon: Icon.shield,
+        roles: ['admin', 'medico', 'enfermagem']
+      }
     ]
   },
   {

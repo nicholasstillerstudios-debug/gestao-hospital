@@ -28,15 +28,20 @@ import { QueuePage } from './pages/Queue'
 import { TriagePage } from './pages/Triage'
 import { CallPanelPage } from './pages/CallPanel'
 import { BPAPage } from './pages/BPA'
+import { SinanPage } from './pages/Sinan'
 import { PontoPage } from './pages/Ponto'
 import { ExamesPage } from './pages/Exames'
 import {
+  PrintAIHPage,
   PrintAttendancePage,
   PrintAttestationPage,
   PrintBpaSheetPage,
+  PrintDischargeSummaryPage,
   PrintModelPage,
   PrintPrescriptionPage,
-  PrintRequisitionPage
+  PrintRequisitionPage,
+  PrintSinanPage,
+  PrintSurgeryReportPage
 } from './pages/Print'
 import { SetupPage } from './pages/Setup'
 
@@ -128,6 +133,38 @@ function App(): React.JSX.Element {
         element={
           <ProtectedRoute roles={['admin', 'medico']}>
             <PrintBpaSheetPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/imprimir/aih/:admissionId"
+        element={
+          <ProtectedRoute roles={['admin', 'medico']}>
+            <PrintAIHPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/imprimir/alta/:admissionId"
+        element={
+          <ProtectedRoute roles={['admin', 'medico', 'enfermagem']}>
+            <PrintDischargeSummaryPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/imprimir/cirurgia/:id"
+        element={
+          <ProtectedRoute roles={['admin', 'medico', 'enfermagem']}>
+            <PrintSurgeryReportPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/imprimir/sinan/:id"
+        element={
+          <ProtectedRoute roles={['admin', 'medico', 'enfermagem']}>
+            <PrintSinanPage />
           </ProtectedRoute>
         }
       />
@@ -268,6 +305,14 @@ function App(): React.JSX.Element {
           element={
             <ProtectedRoute roles={['admin', 'medico']}>
               <BPAPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sinan"
+          element={
+            <ProtectedRoute roles={['admin', 'medico', 'enfermagem']}>
+              <SinanPage />
             </ProtectedRoute>
           }
         />

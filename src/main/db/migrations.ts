@@ -1076,6 +1076,41 @@ const MIGRATIONS: Migration[] = [
       INSERT OR IGNORE INTO app_settings (key, value, updated_at)
         VALUES ('unitOrgaoDestino', 'M', datetime('now'));
     `
+  },
+  {
+    id: 21,
+    name: 'aih_surgery_sinan',
+    sql: `
+      -- AIH (Autorização de Internação Hospitalar) — número emitido pelo
+      -- gestor; preenchido pelo médico autorizador.
+      ALTER TABLE admissions ADD COLUMN aih_number TEXT;
+      ALTER TABLE admissions ADD COLUMN aih_main_procedure_code TEXT;
+      ALTER TABLE admissions ADD COLUMN aih_justification TEXT;
+
+      -- Descrição cirúrgica para a Folha de Sala.
+      ALTER TABLE surgeries ADD COLUMN description TEXT;
+
+      -- SINAN — Sistema de Informação de Agravos de Notificação
+      CREATE TABLE IF NOT EXISTS sinan_notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id INTEGER NOT NULL REFERENCES patients(id) ON DELETE RESTRICT,
+        professional_id INTEGER REFERENCES professionals(id) ON DELETE SET NULL,
+        agravo_cid TEXT NOT NULL,
+        agravo_name TEXT NOT NULL,
+        sintomas_iniciais_em TEXT,
+        notificado_em TEXT NOT NULL DEFAULT (datetime('now')),
+        classificacao TEXT,
+        evolucao TEXT,
+        observations TEXT,
+        exported_at TEXT,
+        created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_sinan_patient ON sinan_notifications(patient_id);
+      CREATE INDEX IF NOT EXISTS idx_sinan_agravo ON sinan_notifications(agravo_cid);
+      CREATE INDEX IF NOT EXISTS idx_sinan_date ON sinan_notifications(notificado_em);
+    `
   }
 ]
 

@@ -47,6 +47,9 @@ interface Row {
   discharge_summary: string | null
   discharge_cid10: string | null
   notes: string | null
+  aih_number: string | null
+  aih_main_procedure_code: string | null
+  aih_justification: string | null
   created_by_user_id: number | null
   created_at: string
   updated_at: string
@@ -101,6 +104,9 @@ function toModel(row: Row): Admission {
     dischargeSummary: row.discharge_summary,
     dischargeCid10: row.discharge_cid10,
     notes: row.notes,
+    aihNumber: row.aih_number,
+    aihMainProcedureCode: row.aih_main_procedure_code,
+    aihJustification: row.aih_justification,
     createdByUserId: row.created_by_user_id,
     createdAt: row.created_at,
     updatedAt: row.updated_at
@@ -597,5 +603,32 @@ export function dischargeAdmission(input: DischargeAdmissionInput): AdmissionWit
   })
   const updated = getAdmission(input.admissionId)
   if (!updated) throw new Error('Internação não encontrada após alta.')
+  return updated
+}
+
+/** Atualiza dados da AIH (número, procedimento principal, justificativa). */
+export function setAih(input: {
+  admissionId: number
+  aihNumber: string | null
+  aihMainProcedureCode: string | null
+  aihJustification: string | null
+}): AdmissionWithRefs {
+  const db = getDb()
+  db.prepare(
+    `UPDATE admissions
+        SET aih_number = ?,
+            aih_main_procedure_code = ?,
+            aih_justification = ?,
+            updated_at = datetime('now')
+      WHERE id = ?`
+  ).run(
+    input.aihNumber?.trim() || null,
+    input.aihMainProcedureCode?.trim() || null,
+    input.aihJustification?.trim() || null,
+    input.admissionId
+  )
+  logAudit({ action: 'update', entity: 'admission_aih', entityId: input.admissionId })
+  const updated = getAdmission(input.admissionId)
+  if (!updated) throw new Error('Internação não encontrada.')
   return updated
 }

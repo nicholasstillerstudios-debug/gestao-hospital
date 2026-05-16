@@ -143,6 +143,14 @@ export function AdmissionRecordPage(): React.JSX.Element {
             <Link to="/internacoes">
               <Button variant="outline">Voltar</Button>
             </Link>
+            <Link to={`/imprimir/aih/${admission.id}`}>
+              <Button variant="outline">Imprimir AIH</Button>
+            </Link>
+            {!isActive ? (
+              <Link to={`/imprimir/alta/${admission.id}`}>
+                <Button variant="outline">Resumo de alta</Button>
+              </Link>
+            ) : null}
             {isActive ? (
               <>
                 <Button variant="outline" onClick={() => setShowTransfer(true)}>
