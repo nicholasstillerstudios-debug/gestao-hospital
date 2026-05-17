@@ -1192,6 +1192,80 @@ export function registerIpcHandlers(): void {
   })
 
   // ============================================================
+  //   Catálogos (CID-10, SIGTAP, CIAP-2)
+  // ============================================================
+  registerHandler(IPC.catalogs.searchCid10, async (q: unknown, limit: unknown) => {
+    requireUser()
+    const c = await import('./repositories/catalogs')
+    return c.searchCid10(String(q ?? ''), limit ? Number(limit) : undefined)
+  })
+  registerHandler(IPC.catalogs.searchSigtap, async (q: unknown, limit: unknown) => {
+    requireUser()
+    const c = await import('./repositories/catalogs')
+    return c.searchSigtap(String(q ?? ''), limit ? Number(limit) : undefined)
+  })
+  registerHandler(IPC.catalogs.searchCiap2, async (q: unknown, limit: unknown) => {
+    requireUser()
+    const c = await import('./repositories/catalogs')
+    return c.searchCiap2(String(q ?? ''), limit ? Number(limit) : undefined)
+  })
+  registerHandler(IPC.catalogs.countCid10, async () => {
+    requireUser()
+    const c = await import('./repositories/catalogs')
+    return c.count('cid10')
+  })
+  registerHandler(IPC.catalogs.countSigtap, async () => {
+    requireUser()
+    const c = await import('./repositories/catalogs')
+    return c.count('sigtap')
+  })
+  registerHandler(IPC.catalogs.countCiap2, async () => {
+    requireUser()
+    const c = await import('./repositories/catalogs')
+    return c.count('ciap2')
+  })
+  registerHandler(IPC.catalogs.importCid10, async (csv: unknown) => {
+    requireRole('admin')
+    const c = await import('./repositories/catalogs')
+    return c.importCid10(String(csv ?? ''))
+  })
+  registerHandler(IPC.catalogs.importSigtap, async (csv: unknown) => {
+    requireRole('admin')
+    const c = await import('./repositories/catalogs')
+    return c.importSigtap(String(csv ?? ''))
+  })
+  registerHandler(IPC.catalogs.importCiap2, async (csv: unknown) => {
+    requireRole('admin')
+    const c = await import('./repositories/catalogs')
+    return c.importCiap2(String(csv ?? ''))
+  })
+
+  // ============================================================
+  //   Anexos por paciente
+  // ============================================================
+  registerHandler(IPC.attachments.list, async (patientId: unknown) => {
+    requireUser()
+    const a = await import('./repositories/attachments')
+    return a.listForPatient(Number(patientId))
+  })
+  registerHandler(IPC.attachments.upload, async (input: unknown) => {
+    requireRole('admin', 'medico', 'enfermagem', 'recepcao')
+    const a = await import('./repositories/attachments')
+    return a.upload(input as Parameters<typeof a.upload>[0])
+  })
+  registerHandler(IPC.attachments.open, async (id: unknown) => {
+    requireUser()
+    const a = await import('./repositories/attachments')
+    return await a.open(Number(id))
+  })
+  registerHandler(IPC.attachments.delete, async (id: unknown) => {
+    requireRole('admin', 'medico')
+    const a = await import('./repositories/attachments')
+    a.remove(Number(id))
+    return null
+  })
+
+  // ============================================================
   //   Appointments CSV export
   // ============================================================
   registerHandler(IPC.exports.appointmentsCsv, async (startIso: unknown, endIso: unknown) => {

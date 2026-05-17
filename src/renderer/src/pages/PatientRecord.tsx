@@ -238,8 +238,131 @@ export function PatientRecordPage(): React.JSX.Element {
             <p className="whitespace-pre-wrap text-sm text-slate-700">{patient.notes}</p>
           </div>
         ) : null}
+
+        <PatientAttachmentsSection patientId={patient.id} />
       </section>
     </>
+  )
+}
+
+function PatientAttachmentsSection({ patientId }: { patientId: number }): React.JSX.Element {
+  const [items, setItems] = useState<import('@shared/types').PatientAttachment[]>([])
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const load = async (): Promise<void> => {
+    try {
+      setItems(await window.api.attachments.list(patientId))
+    } catch (err) {
+      setError((err as Error).message)
+    }
+  }
+
+  useEffect(() => {
+    void load()
+  }, [patientId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const upload = async (file: File, category: string): Promise<void> => {
+    setBusy(true)
+    setError(null)
+    try {
+      const bytes = await file.arrayBuffer()
+      await window.api.attachments.upload({
+        patientId,
+        fileName: file.name,
+        mimeType: file.type || null,
+        bytes,
+        category: category || null,
+        description: null
+      })
+      await load()
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const openFile = async (id: number): Promise<void> => {
+    try {
+      await window.api.attachments.open(id)
+    } catch (err) {
+      setError((err as Error).message)
+    }
+  }
+
+  const remove = async (id: number): Promise<void> => {
+    if (!window.confirm('Excluir este anexo?')) return
+    await window.api.attachments.delete(id)
+    await load()
+  }
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-slate-700">Anexos do paciente</h2>
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+          <input
+            type="file"
+            className="hidden"
+            accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.bmp,.tiff,.tif,.doc,.docx,.txt,.rtf"
+            disabled={busy}
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) {
+                const cat = window.prompt('Categoria (opcional, ex: exame, receita, atestado):', '')
+                void upload(f, cat ?? '')
+              }
+              e.target.value = ''
+            }}
+          />
+          {busy ? 'Enviando…' : '+ Adicionar anexo'}
+        </label>
+      </div>
+      {error ? (
+        <div className="mb-2 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700 ring-1 ring-red-200">
+          {error}
+        </div>
+      ) : null}
+      {items.length === 0 ? (
+        <p className="text-xs text-slate-500">
+          Nenhum anexo. PDF, imagem ou DOC até 25 MB. Arquivos ficam criptografados pelo sistema de
+          arquivos do Windows na pasta do app.
+        </p>
+      ) : (
+        <ul className="divide-y divide-slate-100 text-sm">
+          {items.map((a) => (
+            <li key={a.id} className="flex items-center justify-between py-2">
+              <div className="min-w-0">
+                <div className="truncate font-medium text-slate-800">{a.fileName}</div>
+                <div className="text-xs text-slate-500">
+                  {(a.sizeBytes / 1024).toFixed(1)} KB
+                  {a.category ? ` · ${a.category}` : ''}
+                  {a.uploadedByName ? ` · enviado por ${a.uploadedByName}` : ''}
+                  {a.uploadedAt ? ` · ${formatDateTimeBr(a.uploadedAt)}` : ''}
+                </div>
+              </div>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => void openFile(a.id)}
+                  className="rounded px-2 py-1 text-xs text-cyan-700 hover:bg-cyan-50"
+                >
+                  Abrir
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void remove(a.id)}
+                  className="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                >
+                  Excluir
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }
 

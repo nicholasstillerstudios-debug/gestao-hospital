@@ -101,6 +101,23 @@ export const IPC = {
     create: 'medapp:create',
     delete: 'medapp:delete'
   },
+  catalogs: {
+    searchCid10: 'catalogs:search-cid10',
+    searchSigtap: 'catalogs:search-sigtap',
+    searchCiap2: 'catalogs:search-ciap2',
+    countCid10: 'catalogs:count-cid10',
+    countSigtap: 'catalogs:count-sigtap',
+    countCiap2: 'catalogs:count-ciap2',
+    importCid10: 'catalogs:import-cid10',
+    importSigtap: 'catalogs:import-sigtap',
+    importCiap2: 'catalogs:import-ciap2'
+  },
+  attachments: {
+    list: 'attachments:list',
+    upload: 'attachments:upload',
+    open: 'attachments:open',
+    delete: 'attachments:delete'
+  },
   calls: {
     create: 'calls:create',
     recent: 'calls:recent',

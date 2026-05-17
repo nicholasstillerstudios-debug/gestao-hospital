@@ -1155,6 +1155,56 @@ const MIGRATIONS: Migration[] = [
       ALTER TABLE requisitions ADD COLUMN result_by_professional_id INTEGER
         REFERENCES professionals(id) ON DELETE SET NULL;
     `
+  },
+  {
+    id: 24,
+    name: 'catalogs_and_attachments',
+    sql: `
+      -- Catálogos oficiais com busca tolerante a acentos.
+      CREATE TABLE IF NOT EXISTS cid10 (
+        code TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        chapter TEXT,
+        name_normalized TEXT,
+        active INTEGER NOT NULL DEFAULT 1
+      );
+      CREATE INDEX IF NOT EXISTS idx_cid10_name ON cid10(name_normalized);
+
+      CREATE TABLE IF NOT EXISTS sigtap (
+        code TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        complexity TEXT,
+        catalog_group TEXT,
+        name_normalized TEXT,
+        active INTEGER NOT NULL DEFAULT 1
+      );
+      CREATE INDEX IF NOT EXISTS idx_sigtap_name ON sigtap(name_normalized);
+
+      CREATE TABLE IF NOT EXISTS ciap2 (
+        code TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        chapter TEXT,
+        name_normalized TEXT,
+        active INTEGER NOT NULL DEFAULT 1
+      );
+      CREATE INDEX IF NOT EXISTS idx_ciap2_name ON ciap2(name_normalized);
+
+      -- Anexos por paciente (PDF/imagem/doc) — arquivos em userData/attachments/<patientId>/.
+      CREATE TABLE IF NOT EXISTS patient_attachments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id INTEGER NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+        file_name TEXT NOT NULL,
+        storage_name TEXT NOT NULL,
+        mime_type TEXT,
+        size_bytes INTEGER NOT NULL,
+        category TEXT,
+        description TEXT,
+        uploaded_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        uploaded_by_name TEXT,
+        uploaded_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_attachments_patient ON patient_attachments(patient_id);
+    `
   }
 ]
 

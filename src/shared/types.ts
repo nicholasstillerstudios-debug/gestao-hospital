@@ -1836,4 +1836,58 @@ export interface RequisitionResultInput {
   fileBytes?: ArrayBuffer | Uint8Array | null
 }
 
+// ════════════════════════════════════════════════════════════════════
+//   Catálogos oficiais (CID-10, SIGTAP, CIAP-2)
+// ════════════════════════════════════════════════════════════════════
+
+export interface Cid10Entry {
+  code: string
+  name: string
+  chapter: string | null
+}
+
+export interface SigtapEntry {
+  code: string
+  name: string
+  complexity: string | null
+  group: string | null
+}
+
+export interface Ciap2Entry {
+  code: string
+  name: string
+  chapter: string | null
+}
+
+export interface CatalogImportResult {
+  inserted: number
+  skipped: number
+  total: number
+}
+
+// ════════════════════════════════════════════════════════════════════
+//   Anexos por paciente
+// ════════════════════════════════════════════════════════════════════
+
+export interface PatientAttachment {
+  id: number
+  patientId: number
+  fileName: string
+  mimeType: string | null
+  sizeBytes: number
+  category: string | null
+  description: string | null
+  uploadedByName: string | null
+  uploadedAt: string
+}
+
+export interface PatientAttachmentUploadInput {
+  patientId: number
+  fileName: string
+  mimeType: string | null
+  bytes: ArrayBuffer | Uint8Array
+  category: string | null
+  description: string | null
+}
+
 export type IpcResult<T> = { ok: true; data: T } | { ok: false; error: AppError }

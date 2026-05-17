@@ -95,7 +95,13 @@ import type {
   SinanNotificationInput,
   SinanNotificationWithRefs,
   MedicationApplicationInput,
-  MedicationApplicationWithRefs
+  MedicationApplicationWithRefs,
+  Cid10Entry,
+  SigtapEntry,
+  Ciap2Entry,
+  CatalogImportResult,
+  PatientAttachment,
+  PatientAttachmentUploadInput
 } from '@shared/types'
 
 interface PublicUnitSettings {
@@ -266,6 +272,32 @@ const api = {
     }): Promise<RequisitionWithRefs> => invoke(IPC.requisitions.attachResult, input),
     openResultFile: (requisitionId: number): Promise<{ path: string }> =>
       invoke(IPC.requisitions.openResultFile, requisitionId)
+  },
+  catalogs: {
+    searchCid10: (query: string, limit?: number): Promise<Cid10Entry[]> =>
+      invoke(IPC.catalogs.searchCid10, query, limit),
+    searchSigtap: (query: string, limit?: number): Promise<SigtapEntry[]> =>
+      invoke(IPC.catalogs.searchSigtap, query, limit),
+    searchCiap2: (query: string, limit?: number): Promise<Ciap2Entry[]> =>
+      invoke(IPC.catalogs.searchCiap2, query, limit),
+    countCid10: (): Promise<number> => invoke(IPC.catalogs.countCid10),
+    countSigtap: (): Promise<number> => invoke(IPC.catalogs.countSigtap),
+    countCiap2: (): Promise<number> => invoke(IPC.catalogs.countCiap2),
+    importCid10: (csv: string): Promise<CatalogImportResult> =>
+      invoke(IPC.catalogs.importCid10, csv),
+    importSigtap: (csv: string): Promise<CatalogImportResult> =>
+      invoke(IPC.catalogs.importSigtap, csv),
+    importCiap2: (csv: string): Promise<CatalogImportResult> =>
+      invoke(IPC.catalogs.importCiap2, csv)
+  },
+  attachments: {
+    list: (patientId: number): Promise<PatientAttachment[]> =>
+      invoke(IPC.attachments.list, patientId),
+    upload: (input: PatientAttachmentUploadInput): Promise<PatientAttachment> =>
+      invoke(IPC.attachments.upload, input),
+    open: (id: number): Promise<{ ok: boolean; path: string }> =>
+      invoke(IPC.attachments.open, id),
+    delete: (id: number): Promise<null> => invoke(IPC.attachments.delete, id)
   },
   medicationApplications: {
     list: (filter?: {

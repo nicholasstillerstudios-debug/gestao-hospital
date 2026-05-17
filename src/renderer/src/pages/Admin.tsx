@@ -49,6 +49,7 @@ export function AdminPage(): React.JSX.Element {
     { to: '/admin/auditoria', label: 'Auditoria', exact: false },
     { to: '/admin/backup', label: 'Backup', exact: false },
     { to: '/admin/rede', label: 'Rede', exact: false },
+    { to: '/admin/catalogos', label: 'Catálogos', exact: false },
     { to: '/admin/sistema', label: 'Sistema', exact: false }
   ]
   return (
@@ -138,6 +139,14 @@ export function AdminPage(): React.JSX.Element {
             element={
               <TabPanel>
                 <NetworkTab />
+              </TabPanel>
+            }
+          />
+          <Route
+            path="catalogos"
+            element={
+              <TabPanel>
+                <CatalogsTab />
               </TabPanel>
             }
           />
@@ -2208,6 +2217,118 @@ function SystemTab(): React.JSX.Element {
           ) : null}
         </div>
       </section>
+    </div>
+  )
+}
+
+function CatalogsTab(): React.JSX.Element {
+  const [counts, setCounts] = useState<{ cid10: number; sigtap: number; ciap2: number } | null>(
+    null
+  )
+  const [busy, setBusy] = useState<'cid10' | 'sigtap' | 'ciap2' | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const reload = async (): Promise<void> => {
+    const [c, s, p] = await Promise.all([
+      window.api.catalogs.countCid10(),
+      window.api.catalogs.countSigtap(),
+      window.api.catalogs.countCiap2()
+    ])
+    setCounts({ cid10: c, sigtap: s, ciap2: p })
+  }
+
+  useEffect(() => {
+    void reload()
+  }, [])
+
+  const importFile = async (which: 'cid10' | 'sigtap' | 'ciap2'): Promise<void> => {
+    setError(null)
+    setNotice(null)
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.csv,text/csv'
+    input.onchange = async (): Promise<void> => {
+      const f = input.files?.[0]
+      if (!f) return
+      setBusy(which)
+      try {
+        const csv = await f.text()
+        const fn =
+          which === 'cid10'
+            ? window.api.catalogs.importCid10
+            : which === 'sigtap'
+              ? window.api.catalogs.importSigtap
+              : window.api.catalogs.importCiap2
+        const r = await fn(csv)
+        setNotice(`${r.inserted} adicionados · ${r.skipped} ignorados (já existiam) de ${r.total}.`)
+        await reload()
+      } catch (err) {
+        setError((err as Error).message)
+      } finally {
+        setBusy(null)
+      }
+    }
+    input.click()
+  }
+
+  return (
+    <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <div>
+        <h2 className="text-base font-semibold text-slate-800">Catálogos oficiais SUS</h2>
+        <p className="mt-1 max-w-2xl text-sm text-slate-600">
+          Importe os catálogos de códigos para que campos de CID-10, SIGTAP e CIAP-2 ganhem
+          autocomplete. CSV simples com cabeçalho. Aceita separador <code>,</code> ou <code>;</code>.
+        </p>
+      </div>
+      <ul className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        {(
+          [
+            {
+              key: 'cid10' as const,
+              title: 'CID-10',
+              hint: 'Cabeçalho: code,name,chapter'
+            },
+            {
+              key: 'sigtap' as const,
+              title: 'SIGTAP',
+              hint: 'Cabeçalho: code,name,complexity,group'
+            },
+            {
+              key: 'ciap2' as const,
+              title: 'CIAP-2',
+              hint: 'Cabeçalho: code,name,chapter'
+            }
+          ] as const
+        ).map((c) => (
+          <li key={c.key} className="rounded-md border border-slate-200 p-3">
+            <div className="text-sm font-semibold text-slate-700">{c.title}</div>
+            <div className="text-xs text-slate-500">{c.hint}</div>
+            <div className="mt-2 text-lg font-semibold text-slate-900">
+              {counts ? counts[c.key].toLocaleString('pt-BR') : '…'}{' '}
+              <span className="text-xs font-normal text-slate-500">códigos</span>
+            </div>
+            <Button
+              variant="outline"
+              className="mt-2"
+              onClick={() => void importFile(c.key)}
+              disabled={busy === c.key}
+            >
+              {busy === c.key ? 'Importando…' : 'Importar CSV'}
+            </Button>
+          </li>
+        ))}
+      </ul>
+      {notice ? (
+        <div className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700 ring-1 ring-emerald-200">
+          {notice}
+        </div>
+      ) : null}
+      {error ? (
+        <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200">
+          {error}
+        </div>
+      ) : null}
     </div>
   )
 }

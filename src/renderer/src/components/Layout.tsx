@@ -557,6 +557,7 @@ export function Layout(): React.JSX.Element {
         <div className="app-sidebar-divider" aria-hidden />
         <div className="px-3 py-3">
           <ConnectionIndicator />
+          <VersionIndicator />
           <div className="mt-2 flex items-center gap-3 rounded-lg bg-white/5 px-3 py-2.5 ring-1 ring-white/10">
             <div className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-white ring-1 ring-white/15">
               {initials || '?'}
@@ -648,6 +649,50 @@ function ConnectionIndicator(): React.JSX.Element | null {
     >
       <span className={`inline-block h-2 w-2 flex-none rounded-full ${color}`} />
       <span className="truncate text-[11px] text-white/75">{label}</span>
+    </div>
+  )
+}
+
+function VersionIndicator(): React.JSX.Element {
+  const [version, setVersion] = useState<string | null>(null)
+  const [checking, setChecking] = useState(false)
+  const [status, setStatus] = useState<string | null>(null)
+
+  useEffect(() => {
+    void window.api.meta.appInfo().then((r) => setVersion(r.version)).catch(() => null)
+  }, [])
+
+  const check = async (): Promise<void> => {
+    setChecking(true)
+    setStatus(null)
+    try {
+      const r = await window.api.updater.check()
+      if (r.kind === 'available') setStatus(`Nova versão ${r.version} disponível`)
+      else if (r.kind === 'not-available') setStatus('Você está na versão mais recente')
+      else if (r.kind === 'downloading') setStatus(`Baixando ${Math.round(r.percent)}%`)
+      else if (r.kind === 'downloaded') setStatus('Pronto para instalar — reinicie')
+      else if (r.kind === 'error') setStatus(`Erro: ${r.message}`)
+      else setStatus('Verificando…')
+    } catch (err) {
+      setStatus((err as Error).message)
+    } finally {
+      setChecking(false)
+      setTimeout(() => setStatus(null), 5000)
+    }
+  }
+
+  return (
+    <div className="mt-2 flex items-center justify-between gap-2 rounded-md bg-white/5 px-3 py-1.5 ring-1 ring-white/10">
+      <span className="truncate text-[10px] text-white/55">v{version ?? '?'}</span>
+      <button
+        type="button"
+        onClick={() => void check()}
+        disabled={checking}
+        className="text-[10px] font-medium text-white/70 underline-offset-2 hover:text-white hover:underline disabled:opacity-50"
+        title={status ?? 'Verificar atualização'}
+      >
+        {checking ? 'verificando…' : status ?? 'verificar update'}
+      </button>
     </div>
   )
 }
