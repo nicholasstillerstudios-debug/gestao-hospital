@@ -101,7 +101,11 @@ import type {
   Ciap2Entry,
   CatalogImportResult,
   PatientAttachment,
-  PatientAttachmentUploadInput
+  PatientAttachmentUploadInput,
+  AttestationInput,
+  AttestationWithRefs,
+  InternalTaskInput,
+  InternalTaskWithRefs
 } from '@shared/types'
 
 interface PublicUnitSettings {
@@ -298,6 +302,36 @@ const api = {
     open: (id: number): Promise<{ ok: boolean; path: string }> =>
       invoke(IPC.attachments.open, id),
     delete: (id: number): Promise<null> => invoke(IPC.attachments.delete, id)
+  },
+  attestations: {
+    list: (limit?: number): Promise<AttestationWithRefs[]> =>
+      invoke(IPC.attestations.list, limit),
+    listForPatient: (patientId: number): Promise<AttestationWithRefs[]> =>
+      invoke(IPC.attestations.listForPatient, patientId),
+    get: (id: number): Promise<AttestationWithRefs | null> => invoke(IPC.attestations.get, id),
+    create: (input: AttestationInput): Promise<AttestationWithRefs> =>
+      invoke(IPC.attestations.create, input),
+    delete: (id: number): Promise<null> => invoke(IPC.attestations.delete, id)
+  },
+  tasks: {
+    list: (filter?: { status?: 'pendente' | 'em_andamento' | 'concluida' | 'cancelada' }): Promise<
+      InternalTaskWithRefs[]
+    > => invoke(IPC.tasks.list, filter ?? {}),
+    listForMe: (): Promise<InternalTaskWithRefs[]> => invoke(IPC.tasks.listForMe),
+    countPending: (): Promise<number> => invoke(IPC.tasks.countPending),
+    create: (input: InternalTaskInput): Promise<InternalTaskWithRefs> =>
+      invoke(IPC.tasks.create, input),
+    updateStatus: (
+      id: number,
+      status: 'pendente' | 'em_andamento' | 'concluida' | 'cancelada',
+      notes?: string | null
+    ): Promise<InternalTaskWithRefs> => invoke(IPC.tasks.updateStatus, id, status, notes ?? null),
+    delete: (id: number): Promise<null> => invoke(IPC.tasks.delete, id),
+    onNew: (handler: (task: InternalTaskWithRefs) => void): (() => void) => {
+      const listener = (_event: unknown, task: InternalTaskWithRefs): void => handler(task)
+      ipcRenderer.on(IPC.tasks.onNew, listener)
+      return () => ipcRenderer.removeListener(IPC.tasks.onNew, listener)
+    }
   },
   medicationApplications: {
     list: (filter?: {

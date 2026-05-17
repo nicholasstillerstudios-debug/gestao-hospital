@@ -3,15 +3,53 @@
  * Nenhuma dependência nativa pode ser importada neste arquivo.
  */
 
-export type UserRole = 'admin' | 'recepcao' | 'enfermagem' | 'medico' | 'farmacia'
+export type UserRole =
+  | 'admin'
+  | 'coordenacao'
+  | 'secretaria_saude'
+  | 'recepcao'
+  | 'enfermagem'
+  | 'medico'
+  | 'farmacia'
+  | 'dentista'
+  | 'psicologo'
+  | 'nutricionista'
+  | 'fisioterapeuta'
+  | 'fonoaudiologo'
+  | 'assistente_social'
+  | 'tecnico_enfermagem'
 
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
-  admin: 'Administrador(a)',
+  admin: 'Administrador geral (TI)',
+  coordenacao: 'Coordenação do hospital',
+  secretaria_saude: 'Secretaria Municipal de Saúde',
   recepcao: 'Recepção',
   enfermagem: 'Enfermagem',
   medico: 'Médico(a)',
-  farmacia: 'Farmácia'
+  farmacia: 'Farmácia',
+  dentista: 'Dentista (CD)',
+  psicologo: 'Psicólogo(a)',
+  nutricionista: 'Nutricionista',
+  fisioterapeuta: 'Fisioterapeuta',
+  fonoaudiologo: 'Fonoaudiólogo(a)',
+  assistente_social: 'Assistente Social',
+  tecnico_enfermagem: 'Técnico(a) de Enfermagem'
 }
+
+/** Perfis administrativos com acesso à área Admin. */
+export const ADMIN_ROLES: UserRole[] = ['admin', 'coordenacao', 'secretaria_saude']
+
+/** Perfis clínicos (atende paciente). */
+export const CLINICAL_ROLES: UserRole[] = [
+  'medico',
+  'enfermagem',
+  'dentista',
+  'psicologo',
+  'nutricionista',
+  'fisioterapeuta',
+  'fonoaudiologo',
+  'tecnico_enfermagem'
+]
 
 /**
  * Resumo do que cada papel acessa. Exibido como ajuda na tela de criação
@@ -19,16 +57,23 @@ export const USER_ROLE_LABELS: Record<UserRole, string> = {
  * Layout sidebar — esta string é só guia visual para quem está cadastrando.
  */
 export const USER_ROLE_DESCRIPTIONS: Record<UserRole, string> = {
-  admin:
-    'Acesso total: pacientes, internações, prescrições, farmácia, CCIH, centro cirúrgico, BPA, usuários, configurações, auditoria e backup.',
-  recepcao:
-    'Atende a recepção: cadastra pacientes, agenda consultas, faz check-in e abre atendimentos no PS. Não acessa prescrição, farmácia ou administração.',
+  admin: 'Acesso total: tudo. Inclui usuários, configurações, auditoria, backup.',
+  coordenacao:
+    'Coordenação do hospital: leitura ampla de pacientes/internações/relatórios + gestão de profissionais e timbrado.',
+  secretaria_saude:
+    'Gestor municipal: visão consolidada de relatórios, BPA, internações e indicadores. Sem acesso a dados clínicos individuais.',
+  recepcao: 'Recepção: cadastra pacientes, agenda consultas, faz check-in e abre PS.',
   enfermagem:
-    'Equipe de enfermagem: triagem, sinais vitais, evoluções, checagem de medicação (MAR), balanço hídrico, isolamentos e admissão de pacientes em leito.',
-  medico:
-    'Médico(a): prescreve, evolui, autoriza alta, cria cirurgias, registra IRAS e libera atendimentos. Acessa relatórios e BPA.',
-  farmacia:
-    'Farmácia hospitalar: cadastra medicamentos, gerencia lotes, lança entradas/saídas de estoque e dispensa para o paciente.'
+    'Triagem, sinais vitais, evoluções, MAR, balanço hídrico, isolamentos e admissão.',
+  medico: 'Prescreve, evolui, autoriza alta, cirurgias, IRAS. Acessa relatórios e BPA.',
+  farmacia: 'Farmácia: medicamentos, lotes, entrada/saída e dispensação.',
+  dentista: 'Odontologia: prontuário, prescrição e atestados odontológicos.',
+  psicologo: 'Psicologia: prontuário, evoluções, encaminhamentos.',
+  nutricionista: 'Nutrição: avaliação, prescrição dietoterápica, evoluções.',
+  fisioterapeuta: 'Fisioterapia: avaliação, evoluções, prescrição.',
+  fonoaudiologo: 'Fonoaudiologia: avaliação e evoluções.',
+  assistente_social: 'Serviço social: acompanhamento, encaminhamentos.',
+  tecnico_enfermagem: 'Auxilia a enfermagem: sinais vitais, MAR, curativos.'
 }
 
 export interface User {
@@ -1888,6 +1933,115 @@ export interface PatientAttachmentUploadInput {
   bytes: ArrayBuffer | Uint8Array
   category: string | null
   description: string | null
+}
+
+// ════════════════════════════════════════════════════════════════════
+//   Atestados / Declarações
+// ════════════════════════════════════════════════════════════════════
+
+export type AttestationKind = 'medico' | 'comparecimento' | 'acompanhante' | 'aptidao' | 'custom'
+
+export const ATTESTATION_KIND_LABELS: Record<AttestationKind, string> = {
+  medico: 'Atestado médico (afastamento)',
+  comparecimento: 'Declaração de comparecimento',
+  acompanhante: 'Declaração de acompanhante',
+  aptidao: 'Atestado de aptidão',
+  custom: 'Personalizado'
+}
+
+export interface Attestation {
+  id: number
+  patientId: number
+  professionalId: number | null
+  kind: AttestationKind
+  days: number | null
+  cid10: string | null
+  startDate: string | null
+  endDate: string | null
+  bodyText: string | null
+  notes: string | null
+  issuedAt: string
+  createdByUserId: number | null
+  createdAt: string
+}
+
+export interface AttestationWithRefs extends Attestation {
+  patientName: string
+  patientCpf: string | null
+  patientCns: string | null
+  patientBirthDate: string | null
+  patientSex: Sex | null
+  professionalName: string | null
+  professionalCouncilType: string | null
+  professionalCouncilNumber: string | null
+  professionalCouncilUf: string | null
+}
+
+export interface AttestationInput {
+  patientId: number
+  professionalId?: number | null
+  kind: AttestationKind
+  days?: number | null
+  cid10?: string | null
+  startDate?: string | null
+  endDate?: string | null
+  bodyText?: string | null
+  notes?: string | null
+}
+
+// ════════════════════════════════════════════════════════════════════
+//   Tarefas / Avisos internos
+// ════════════════════════════════════════════════════════════════════
+
+export type TaskPriority = 'baixa' | 'normal' | 'alta' | 'urgente'
+export type TaskStatus = 'pendente' | 'em_andamento' | 'concluida' | 'cancelada'
+
+export const TASK_PRIORITY_LABELS: Record<TaskPriority, string> = {
+  baixa: 'Baixa',
+  normal: 'Normal',
+  alta: 'Alta',
+  urgente: 'Urgente'
+}
+
+export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
+  pendente: 'Pendente',
+  em_andamento: 'Em andamento',
+  concluida: 'Concluída',
+  cancelada: 'Cancelada'
+}
+
+export interface InternalTask {
+  id: number
+  title: string
+  description: string | null
+  fromUserId: number | null
+  fromUserName: string | null
+  toUserId: number | null
+  toRole: UserRole | null
+  patientId: number | null
+  priority: TaskPriority
+  status: TaskStatus
+  dueAt: string | null
+  completedAt: string | null
+  completedByUserId: number | null
+  completedByName: string | null
+  completionNotes: string | null
+  createdAt: string
+}
+
+export interface InternalTaskWithRefs extends InternalTask {
+  patientName: string | null
+  toUserName: string | null
+}
+
+export interface InternalTaskInput {
+  title: string
+  description?: string | null
+  toUserId?: number | null
+  toRole?: UserRole | null
+  patientId?: number | null
+  priority?: TaskPriority
+  dueAt?: string | null
 }
 
 export type IpcResult<T> = { ok: true; data: T } | { ok: false; error: AppError }

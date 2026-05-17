@@ -118,6 +118,22 @@ export const IPC = {
     open: 'attachments:open',
     delete: 'attachments:delete'
   },
+  attestations: {
+    list: 'attestations:list',
+    listForPatient: 'attestations:list-for-patient',
+    get: 'attestations:get',
+    create: 'attestations:create',
+    delete: 'attestations:delete'
+  },
+  tasks: {
+    list: 'tasks:list',
+    listForMe: 'tasks:list-for-me',
+    countPending: 'tasks:count-pending',
+    create: 'tasks:create',
+    updateStatus: 'tasks:update-status',
+    delete: 'tasks:delete',
+    onNew: 'tasks:on-new'
+  },
   calls: {
     create: 'calls:create',
     recent: 'calls:recent',

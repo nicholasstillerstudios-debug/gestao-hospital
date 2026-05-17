@@ -6,6 +6,7 @@ import { cn, roleLabel } from '@renderer/lib/utils'
 import { ErrorBoundary } from '@renderer/components/ErrorBoundary'
 import { BrandLogo } from '@renderer/components/BrandLogo'
 import { UpdateBanner } from '@renderer/components/UpdateBanner'
+import { CommandPalette } from '@renderer/components/CommandPalette'
 import type { UserRole } from '@shared/types'
 
 interface NavItem {
@@ -431,6 +432,20 @@ const GROUPS: NavGroup[] = [
         roles: ['admin', 'medico', 'enfermagem']
       },
       {
+        to: '/atestados',
+        label: 'Atestados / Declarações',
+        icon: Icon.docs,
+        roles: [
+          'admin',
+          'medico',
+          'enfermagem',
+          'dentista',
+          'psicologo',
+          'nutricionista',
+          'fisioterapeuta'
+        ]
+      },
+      {
         to: '/internacoes',
         label: 'Internações',
         icon: Icon.clipboard,
@@ -471,8 +486,14 @@ const GROUPS: NavGroup[] = [
   {
     category: 'Administração',
     items: [
+      { to: '/tarefas', label: 'Tarefas / Avisos', icon: Icon.clipboard },
       { to: '/relatorios', label: 'Relatórios', icon: Icon.chart, roles: ['admin', 'medico'] },
-      { to: '/admin', label: 'Administração', icon: Icon.cog, roles: ['admin'] }
+      {
+        to: '/admin',
+        label: 'Administração',
+        icon: Icon.cog,
+        roles: ['admin', 'coordenacao', 'secretaria_saude']
+      }
     ]
   }
 ]
@@ -585,6 +606,7 @@ export function Layout(): React.JSX.Element {
         </ErrorBoundary>
       </main>
       <UpdateBanner />
+      <CommandPalette />
     </div>
   )
 }

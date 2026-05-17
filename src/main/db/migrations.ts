@@ -1205,6 +1205,82 @@ const MIGRATIONS: Migration[] = [
       );
       CREATE INDEX IF NOT EXISTS idx_attachments_patient ON patient_attachments(patient_id);
     `
+  },
+  {
+    id: 25,
+    name: 'roles_attestations_tasks',
+    requiresForeignKeysOff: true,
+    sql: `
+      -- Expande os papéis: adiciona coordenacao, secretaria_saude (gestão
+      -- municipal), dentista, psicologo, fisioterapeuta e outras
+      -- categorias clínicas usadas em hospitais. Recria a tabela users
+      -- porque o CHECK atual é estrito.
+      CREATE TABLE users_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        full_name TEXT NOT NULL,
+        role TEXT NOT NULL CHECK (role IN (
+          'admin','coordenacao','secretaria_saude',
+          'recepcao','enfermagem','medico','farmacia',
+          'dentista','psicologo','nutricionista','fisioterapeuta',
+          'fonoaudiologo','assistente_social','tecnico_enfermagem'
+        )),
+        active INTEGER NOT NULL DEFAULT 1,
+        must_change_password INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      INSERT INTO users_new SELECT * FROM users;
+      DROP TABLE users;
+      ALTER TABLE users_new RENAME TO users;
+
+      -- Atestados e declarações independentes (sem necessidade de
+      -- consulta — o profissional emite e imprime).
+      CREATE TABLE IF NOT EXISTS attestations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id INTEGER NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+        professional_id INTEGER REFERENCES professionals(id) ON DELETE SET NULL,
+        kind TEXT NOT NULL CHECK (kind IN ('medico','comparecimento','acompanhante','aptidao','custom')),
+        days INTEGER,
+        cid10 TEXT,
+        start_date TEXT,
+        end_date TEXT,
+        body_text TEXT,
+        notes TEXT,
+        issued_at TEXT NOT NULL DEFAULT (datetime('now')),
+        created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_attestations_patient ON attestations(patient_id);
+      CREATE INDEX IF NOT EXISTS idx_attestations_issued ON attestations(issued_at);
+
+      -- Tarefas/avisos internos entre colaboradores. Pode endereçar a
+      -- um usuário específico OU a um papel inteiro.
+      CREATE TABLE IF NOT EXISTS internal_tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT,
+        from_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        from_user_name TEXT,
+        to_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        to_role TEXT,
+        patient_id INTEGER REFERENCES patients(id) ON DELETE SET NULL,
+        priority TEXT NOT NULL DEFAULT 'normal'
+          CHECK (priority IN ('baixa','normal','alta','urgente')),
+        status TEXT NOT NULL DEFAULT 'pendente'
+          CHECK (status IN ('pendente','em_andamento','concluida','cancelada')),
+        due_at TEXT,
+        completed_at TEXT,
+        completed_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        completed_by_name TEXT,
+        completion_notes TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_tasks_to_user ON internal_tasks(to_user_id);
+      CREATE INDEX IF NOT EXISTS idx_tasks_to_role ON internal_tasks(to_role);
+      CREATE INDEX IF NOT EXISTS idx_tasks_status ON internal_tasks(status);
+      CREATE INDEX IF NOT EXISTS idx_tasks_patient ON internal_tasks(patient_id);
+    `
   }
 ]
 

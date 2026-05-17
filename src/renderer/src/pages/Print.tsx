@@ -6,6 +6,7 @@ import type {
   AdmissionEvolutionWithRefs,
   AppointmentWithRefs,
   Attendance,
+  AttestationWithRefs,
   BpaRecordWithRefs,
   Patient,
   PrescriptionWithRefs,
@@ -15,7 +16,11 @@ import type {
   SurgeryTimeOutItem,
   SurgeryWithRefs
 } from '@shared/types'
-import { ANESTHESIA_TYPE_LABELS, REQUISITION_TYPE_LABELS } from '@shared/types'
+import {
+  ANESTHESIA_TYPE_LABELS,
+  ATTESTATION_KIND_LABELS,
+  REQUISITION_TYPE_LABELS
+} from '@shared/types'
 
 export interface UnitInfo {
   unitName: string
@@ -1254,6 +1259,84 @@ export function PrintSurgeryReportPage(): React.JSX.Element {
       <PrintSignature
         professional={surgery.surgeonName ?? '________________________________________'}
         subtitle="Cirurgião / CRM"
+      />
+    </div>
+  )
+}
+
+// ════════════════════════════════════════════════════════════════════
+//   Atestado / Declaração emitida (PrintAttestationDoc)
+// ════════════════════════════════════════════════════════════════════
+export function PrintAttestationDocPage(): React.JSX.Element {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const { unit, logos, layout } = useUnitInfo()
+  const [a, setA] = useState<AttestationWithRefs | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void window.api.attestations
+      .get(Number(id))
+      .then((r) => !cancelled && setA(r))
+      .catch((e) => !cancelled && setError((e as Error).message))
+    return () => {
+      cancelled = true
+    }
+  }, [id])
+
+  if (error) return <PrintError message={error} onClose={() => navigate(-1)} />
+  if (!a) return <div className="print-document">Carregando…</div>
+
+  const today = new Date(a.issuedAt)
+  const dateStr = today.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+
+  const defaultBody = (): string => {
+    const nome = a.patientName
+    const cpf = a.patientCpf ? `CPF ${formatCpf(a.patientCpf)}` : 'CPF não informado'
+    if (a.kind === 'medico') {
+      const dias = a.days ?? 1
+      const cidPart = a.cid10 ? ` (CID-10: ${a.cid10})` : ''
+      return `Atesto, para os devidos fins, que o(a) paciente ${nome}, ${cpf}, esteve sob meus cuidados e necessita de afastamento de suas atividades laborais por ${dias} (${dias === 1 ? 'um' : 'múltiplos'}) dia(s)${cidPart}, a partir de ${a.startDate ? formatDateBr(a.startDate) : dateStr}.`
+    }
+    if (a.kind === 'comparecimento') {
+      return `Declaro, para os devidos fins, que o(a) Sr.(a) ${nome}, ${cpf}, compareceu a esta unidade de saúde no dia ${dateStr} para atendimento.`
+    }
+    if (a.kind === 'acompanhante') {
+      return `Declaro, para os devidos fins, que o(a) Sr.(a) ${nome}, ${cpf}, compareceu a esta unidade na qualidade de ACOMPANHANTE de paciente no dia ${dateStr}.`
+    }
+    if (a.kind === 'aptidao') {
+      return `Atesto, para os devidos fins, que o(a) paciente ${nome}, ${cpf}, encontra-se em condições clínicas de aptidão para suas atividades habituais.`
+    }
+    return ''
+  }
+
+  const body = a.bodyText && a.bodyText.trim().length > 0 ? a.bodyText : defaultBody()
+
+  return (
+    <div className="print-document">
+      <PrintToolbar
+        onPrint={() => window.print()}
+        onSavePdf={() => void saveAsPdf(`${a.kind}-${a.id}`)}
+        onClose={() => navigate(-1)}
+      />
+      <PrintHeader
+        title={ATTESTATION_KIND_LABELS[a.kind].toUpperCase()}
+        unit={unit}
+        logos={logos}
+        layout={layout}
+      />
+      <p style={{ fontSize: 14, lineHeight: 1.6, marginTop: 24, textAlign: 'justify' }}>{body}</p>
+      <p style={{ fontSize: 12, color: '#475569', marginTop: 24, textAlign: 'right' }}>
+        {unit.unitMunicipality || '________'}, {dateStr}.
+      </p>
+      <PrintSignature
+        professional={a.professionalName ?? '________________________________________'}
+        subtitle={
+          a.professionalCouncilType && a.professionalCouncilNumber
+            ? `${a.professionalCouncilType} ${a.professionalCouncilNumber}${a.professionalCouncilUf ? '-' + a.professionalCouncilUf : ''}`
+            : 'Profissional responsável'
+        }
       />
     </div>
   )

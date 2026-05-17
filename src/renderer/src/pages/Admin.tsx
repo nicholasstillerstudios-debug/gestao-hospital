@@ -22,7 +22,8 @@ import {
   RUN_MODE_LABELS,
   UNIT_TYPE_LABELS,
   UNIT_TYPE_ORDER,
-  USER_ROLE_DESCRIPTIONS
+  USER_ROLE_DESCRIPTIONS,
+  USER_ROLE_LABELS
 } from '@shared/types'
 import type { RunMode } from '@shared/types'
 import { useTheme, THEME_PRESETS, type ThemePreset } from '@renderer/stores/theme'
@@ -347,13 +348,11 @@ function UserModal({
             </Field>
             <Field label="Perfil de acesso" required hint={USER_ROLE_DESCRIPTIONS[role]}>
               <Select value={role} onChange={(e) => setRole(e.target.value as UserRole)}>
-                <option value="admin">Administrador(a) — acesso total</option>
-                <option value="recepcao">Recepção — cadastro, agenda, check-in</option>
-                <option value="enfermagem">
-                  Enfermagem — triagem, sinais vitais, evolução, MAR
-                </option>
-                <option value="medico">Médico(a) — prescrição, cirurgia, alta</option>
-                <option value="farmacia">Farmácia — estoque e dispensação</option>
+                {(Object.keys(USER_ROLE_LABELS) as UserRole[]).map((r) => (
+                  <option key={r} value={r}>
+                    {USER_ROLE_LABELS[r]}
+                  </option>
+                ))}
               </Select>
             </Field>
           </>

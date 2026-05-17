@@ -1266,6 +1266,83 @@ export function registerIpcHandlers(): void {
   })
 
   // ============================================================
+  //   Atestados / Declarações
+  // ============================================================
+  registerHandler(IPC.attestations.list, async (limit: unknown) => {
+    requireUser()
+    const r = await import('./repositories/attestations')
+    return r.list(limit ? Number(limit) : undefined)
+  })
+  registerHandler(IPC.attestations.listForPatient, async (patientId: unknown) => {
+    requireUser()
+    const r = await import('./repositories/attestations')
+    return r.listForPatient(Number(patientId))
+  })
+  registerHandler(IPC.attestations.get, async (id: unknown) => {
+    requireUser()
+    const r = await import('./repositories/attestations')
+    return r.get(Number(id))
+  })
+  registerHandler(IPC.attestations.create, async (input: unknown) => {
+    requireRole(
+      'admin',
+      'medico',
+      'enfermagem',
+      'dentista',
+      'psicologo',
+      'nutricionista',
+      'fisioterapeuta'
+    )
+    const r = await import('./repositories/attestations')
+    return r.create(input as Parameters<typeof r.create>[0])
+  })
+  registerHandler(IPC.attestations.delete, async (id: unknown) => {
+    requireRole('admin', 'medico')
+    const r = await import('./repositories/attestations')
+    r.remove(Number(id))
+    return null
+  })
+
+  // ============================================================
+  //   Tarefas / Avisos internos
+  // ============================================================
+  registerHandler(IPC.tasks.list, async (filter: unknown) => {
+    requireUser()
+    const r = await import('./repositories/tasks')
+    return r.list((filter as { status?: 'pendente' | 'em_andamento' | 'concluida' | 'cancelada' }) ?? undefined)
+  })
+  registerHandler(IPC.tasks.listForMe, async () => {
+    const user = requireUser()
+    const r = await import('./repositories/tasks')
+    return r.listForMe(user.id, user.role)
+  })
+  registerHandler(IPC.tasks.countPending, async () => {
+    const user = requireUser()
+    const r = await import('./repositories/tasks')
+    return r.countPending(user.id, user.role)
+  })
+  registerHandler(IPC.tasks.create, async (input: unknown) => {
+    requireUser()
+    const r = await import('./repositories/tasks')
+    return r.create(input as Parameters<typeof r.create>[0])
+  })
+  registerHandler(IPC.tasks.updateStatus, async (id: unknown, status: unknown, notes: unknown) => {
+    requireUser()
+    const r = await import('./repositories/tasks')
+    return r.updateStatus(
+      Number(id),
+      String(status) as 'pendente' | 'em_andamento' | 'concluida' | 'cancelada',
+      typeof notes === 'string' ? notes : null
+    )
+  })
+  registerHandler(IPC.tasks.delete, async (id: unknown) => {
+    requireRole('admin', 'coordenacao')
+    const r = await import('./repositories/tasks')
+    r.remove(Number(id))
+    return null
+  })
+
+  // ============================================================
   //   Appointments CSV export
   // ============================================================
   registerHandler(IPC.exports.appointmentsCsv, async (startIso: unknown, endIso: unknown) => {

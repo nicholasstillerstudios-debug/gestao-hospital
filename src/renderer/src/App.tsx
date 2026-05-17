@@ -30,11 +30,14 @@ import { CallPanelPage } from './pages/CallPanel'
 import { BPAPage } from './pages/BPA'
 import { SinanPage } from './pages/Sinan'
 import { MedicationApplicationsPage } from './pages/MedicationApplications'
+import { AttestationsPage } from './pages/Attestations'
+import { TasksPage } from './pages/Tasks'
 import { ExamesPage } from './pages/Exames'
 import {
   PrintAIHPage,
   PrintAttendancePage,
   PrintAttestationPage,
+  PrintAttestationDocPage,
   PrintBpaSheetPage,
   PrintDischargeSummaryPage,
   PrintModelPage,
@@ -165,6 +168,14 @@ function App(): React.JSX.Element {
         element={
           <ProtectedRoute roles={['admin', 'medico', 'enfermagem']}>
             <PrintSinanPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/imprimir/atestado-doc/:id"
+        element={
+          <ProtectedRoute>
+            <PrintAttestationDocPage />
           </ProtectedRoute>
         }
       />
@@ -325,9 +336,35 @@ function App(): React.JSX.Element {
           }
         />
         <Route
+          path="/atestados"
+          element={
+            <ProtectedRoute
+              roles={[
+                'admin',
+                'medico',
+                'enfermagem',
+                'dentista',
+                'psicologo',
+                'nutricionista',
+                'fisioterapeuta'
+              ]}
+            >
+              <AttestationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tarefas"
+          element={
+            <ProtectedRoute>
+              <TasksPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/*"
           element={
-            <ProtectedRoute roles={['admin']}>
+            <ProtectedRoute roles={['admin', 'coordenacao', 'secretaria_saude']}>
               <AdminPage />
             </ProtectedRoute>
           }

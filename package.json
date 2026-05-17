@@ -1,6 +1,6 @@
 {
   "name": "gestao-hospital",
-  "version": "1.9.1",
+  "version": "1.10.0",
   "description": "Sistema desktop de gestão hospitalar — leitos, internação, prontuário, pronto-socorro, centro cirúrgico e CCIH",
   "main": "./out/main/index.js",
   "author": "Nicholas Stiller",

@@ -64,19 +64,10 @@ export function ageFromBirthDate(iso: string | null | undefined): number | null 
   return age
 }
 
+import { USER_ROLE_LABELS } from '@shared/types'
+
 export function roleLabel(role: UserRole): string {
-  switch (role) {
-    case 'admin':
-      return 'Administrador'
-    case 'recepcao':
-      return 'Recepção'
-    case 'enfermagem':
-      return 'Enfermagem'
-    case 'medico':
-      return 'Médico(a)'
-    case 'farmacia':
-      return 'Farmácia'
-  }
+  return USER_ROLE_LABELS[role] ?? String(role)
 }
 
 /**
