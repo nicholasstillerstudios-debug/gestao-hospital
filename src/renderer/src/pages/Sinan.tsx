@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '@renderer/components/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
 import { Modal } from '@renderer/components/ui/Modal'
+import { CodePicker } from '@renderer/components/CodePicker'
 import { Field, Input, Select } from '@renderer/components/ui/Field'
 import { formatDateTimeBr } from '@renderer/lib/utils'
 import {
@@ -304,19 +305,22 @@ function NewSinanModal({
           </Field>
           {!SINAN_COMMON_AGRAVOS.find((a) => a.cid === agravoCid) ? (
             <Field label="CID + nome">
-              <div className="flex gap-2">
-                <Input
-                  className="w-24"
-                  value={agravoCid}
-                  onChange={(e) => setAgravoCid(e.target.value)}
-                  placeholder="CID"
-                />
-                <Input
-                  value={agravoName}
-                  onChange={(e) => setAgravoName(e.target.value)}
-                  placeholder="Nome do agravo"
-                />
-              </div>
+              <CodePicker
+                catalog="cid10"
+                value={agravoCid}
+                onChange={setAgravoCid}
+                onPick={(code, name) => {
+                  setAgravoCid(code)
+                  setAgravoName(name)
+                }}
+                placeholder="Código ou diagnóstico"
+              />
+              <Input
+                className="mt-1"
+                value={agravoName}
+                onChange={(e) => setAgravoName(e.target.value)}
+                placeholder="Nome do agravo"
+              />
             </Field>
           ) : (
             <Field label="Início dos sintomas">

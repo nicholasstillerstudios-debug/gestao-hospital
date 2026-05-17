@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@renderer/components/ui/Button'
 import { Field, Input, Select, Textarea } from '@renderer/components/ui/Field'
+import { CodePicker } from '@renderer/components/CodePicker'
 import { ageFromBirthDate, formatCpf } from '@renderer/lib/utils'
 import {
   ADMISSION_TYPE_LABELS,
@@ -251,7 +252,7 @@ export function AdmitPatientForm({
           <Textarea value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)} rows={2} />
         </Field>
         <Field label="CID-10">
-          <Input value={cid10} onChange={(e) => setCid10(e.target.value)} maxLength={10} />
+          <CodePicker catalog="cid10" value={cid10} onChange={setCid10} placeholder="CID ou diagnóstico" />
         </Field>
       </div>
 

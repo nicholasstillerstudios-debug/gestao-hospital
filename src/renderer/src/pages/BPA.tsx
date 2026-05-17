@@ -10,6 +10,7 @@ import { PageHeader } from '@renderer/components/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
 import { Modal } from '@renderer/components/ui/Modal'
 import { Input, Field } from '@renderer/components/ui/Field'
+import { CodePicker } from '@renderer/components/CodePicker'
 import { formatDateTimeBr } from '@renderer/lib/utils'
 import type {
   BpaConsolidation,
@@ -442,10 +443,14 @@ function NewBpaRecordModal({
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Código SIGTAP">
-            <Input
+            <CodePicker
+              catalog="sigtap"
               value={procedureCode}
-              onChange={(e) => setProcedureCode(e.target.value)}
-              placeholder="0301010013"
+              onChange={setProcedureCode}
+              onPick={(_code, name) => {
+                if (!procedureName.trim()) setProcedureName(name)
+              }}
+              placeholder="Código ou nome do procedimento"
             />
           </Field>
           <Field label="Quantidade">
@@ -475,7 +480,7 @@ function NewBpaRecordModal({
             />
           </Field>
           <Field label="CID-10 (opcional)">
-            <Input value={cid10} onChange={(e) => setCid10(e.target.value)} />
+            <CodePicker catalog="cid10" value={cid10} onChange={setCid10} placeholder="CID ou diagnóstico" />
           </Field>
         </div>
 

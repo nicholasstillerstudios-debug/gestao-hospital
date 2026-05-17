@@ -4,6 +4,7 @@ import { PageHeader } from '@renderer/components/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
 import { Modal } from '@renderer/components/ui/Modal'
 import { Field, Input, Textarea } from '@renderer/components/ui/Field'
+import { CodePicker } from '@renderer/components/CodePicker'
 import { TransferAdmissionForm } from '@renderer/components/hospital/TransferAdmissionForm'
 import { DischargeAdmissionForm } from '@renderer/components/hospital/DischargeAdmissionForm'
 import { EvolutionForm } from '@renderer/components/hospital/EvolutionForm'
@@ -1360,11 +1361,7 @@ function AihEditorModal({
             />
           </Field>
           <Field label="Procedimento principal (SIGTAP)">
-            <Input
-              value={proc}
-              onChange={(e) => setProc(e.target.value.replace(/\D/g, '').slice(0, 10))}
-              placeholder="0000000000"
-            />
+            <CodePicker catalog="sigtap" value={proc} onChange={setProc} placeholder="Código ou nome do procedimento" />
           </Field>
         </div>
         <Field label="Justificativa clínica">
